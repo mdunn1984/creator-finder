@@ -82,4 +82,72 @@
   <!-- Right: Results -->
   <section class="card">
     <h2>Results</h2>
-    <div class
+    <div class="gcse-searchresults-only"></div>
+  </section>
+</main>
+
+<script>
+  const $ = id => document.getElementById(id);
+
+  function buildQuery() {
+    const keywords = $("keywords").value.trim();
+    const location = $("location").value.trim();
+    const extras   = $("extras").value.trim();
+    const platforms = Array.from(document.querySelectorAll(".pf:checked")).map(p=>`site:${p.value}`);
+
+    const parts = [];
+    if (keywords) parts.push(keywords);
+    if (location) parts.push(`("${location}")`);
+    if (extras)   parts.push(extras);
+    if (platforms.length) parts.push("(" + platforms.join(" OR ") + ")");
+    return parts.join(" ").replace(/\s+/g,' ').trim()
+      || "site:instagram.com OR site:tiktok.com OR site:youtube.com";
+  }
+
+  // Expose a global runner so the CSE callback can call it
+  window.runCSE = function(q, attempts=0) {
+    const maxAttempts = 30; // ~6s total
+    const ready = (window.google
+      && google.search && google.search.cse && google.search.cse.element
+      && (google.search.cse.element.getElement('searchresults-only0') || google.search.cse.element.getElement('standard0'))
+    );
+
+    if (ready) {
+      try {
+        // Prefer the correct id for searchresults-only, fall back to standard0 if present
+        const el = google.search.cse.element.getElement('searchresults-only0')
+               || google.search.cse.element.getElement('standard0');
+        el.execute(q);
+        $("status").textContent = '';
+        return;
+      } catch(e) {
+        console.warn('Execute failed; retrying…', e);
+      }
+    }
+    if (attempts < maxAttempts) {
+      setTimeout(()=> window.runCSE(q, attempts+1), 200);
+    } else {
+      $("status").textContent = 'Could not initialize search element (blocked by extensions or cookies?). Try a different browser or disable blockers.';
+      $("status").className = 'error';
+    }
+  };
+
+  $("run").addEventListener("click", (e)=>{
+    e.preventDefault();
+    window.runCSE(buildQuery());
+  });
+
+  $("reset").addEventListener("click", (e)=>{
+    e.preventDefault();
+    $("keywords").value = $("location").value = $("extras").value = "";
+    document.querySelectorAll(".pf").forEach(i=> i.checked = true);
+    window.runCSE("site:instagram.com OR site:tiktok.com OR site:youtube.com");
+  });
+
+  $("selftest").addEventListener("click", (e)=>{
+    e.preventDefault();
+    window.runCSE("test");
+  });
+</script>
+</body>
+</html>
