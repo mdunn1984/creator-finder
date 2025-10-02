@@ -39,7 +39,6 @@
             tag: 'searchresults-only',
             attributes: { enableOrderBy: true, linkTarget: '_blank' }
           });
-          // mark CSE as available
           window.__cseReady = true;
         } catch (e) {
           console.error('CSE render error:', e);
@@ -47,9 +46,7 @@
       }
     };
   </script>
-  <!-- Load Google CSE with your cx -->
   <script async src="https://cse.google.com/cse.js?cx=930c9ba0544ee474b"></script>
-  <noscript><style>#cse-results{display:none}</style></noscript>
 </head>
 <body>
 <header>
@@ -76,23 +73,31 @@
       <label class="chip"><input type="checkbox" class="pf" value="youtube.com" checked> YouTube</label>
     </div>
 
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <label>Contactability Signals (optional)</label>
+    <div class="chips">
+      <label class="chip"><input type="checkbox" class="sig" value='"email"' checked> email</label>
+      <label class="chip"><input type="checkbox" class="sig" value='"business inquiries"' checked> business inquiries</label>
+      <label class="chip"><input type="checkbox" class="sig" value='"management"'> management</label>
+      <label class="chip"><input type="checkbox" class="sig" value='"partnerships"'> partnerships</label>
+      <label class="chip"><input type="checkbox" class="sig" value='"collab" OR "collaboration"'> collaboration</label>
+    </div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
       <button id="run" class="btn">Run Search</button>
       <button id="reset" class="btn secondary">Reset</button>
       <button id="selftest" class="btn secondary">Test Search</button>
     </div>
+    <div id="quickPills" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"></div>
     <div id="status" class="hint" style="margin-top:8px"></div>
   </section>
 
   <!-- Right: Results -->
   <section class="card">
     <h2>Results</h2>
-    <!-- Hidden search box (we drive it via JS) -->
     <div id="cse-searchbox"></div>
-    <!-- Visible results container -->
     <div id="cse-results"></div>
     <div id="fallbackNote" class="hint" style="margin-top:8px;display:none">
-      Couldn’t load in-page results (likely a content blocker). Opened Google in this tab instead.
+      Couldn’t load in-page results (likely a blocker). Opened Google in this tab instead.
     </div>
   </section>
 </main>
@@ -105,66 +110,63 @@
     const location = $("location").value.trim();
     const extras   = $("extras").value.trim();
     const platforms = Array.from(document.querySelectorAll(".pf:checked")).map(p=>`site:${p.value}`);
+    const signals  = Array.from(document.querySelectorAll(".sig:checked")).map(s=>s.value);
 
     const parts = [];
+    if (platforms.length) parts.push("(" + platforms.join(" OR ") + ")");
     if (keywords) parts.push(keywords);
     if (location) parts.push(`("${location}")`);
     if (extras)   parts.push(extras);
-    if (platforms.length) parts.push("(" + platforms.join(" OR ") + ")");
-    const q = parts.join(" ").replace(/\s+/g,' ').trim();
-    return q || "site:instagram.com OR site:tiktok.com OR site:youtube.com";
+    if (signals.length) parts.push("(" + signals.join(" OR ") + ")");
+    parts.push("-inurl:/login -inurl:/accounts -inurl:/signup -intitle:login -site:help.instagram.com");
+
+    return parts.join(" ").replace(/\s+/g,' ').trim()
+      || "site:instagram.com OR site:tiktok.com OR site:youtube.com";
   }
 
-  function googleUrl(q) {
-    return "https://www.google.com/search?q=" + encodeURIComponent(q);
-  }
+  function googleUrl(q) { return "https://www.google.com/search?q=" + encodeURIComponent(q); }
 
   function runInPage(q, tries=0) {
-    const max = 30; // ~6s
+    const max = 30;
     const ready = window.__cseReady
-      && window.google && google.search && google.search.cse && google.search.cse.element
+      && google.search && google.search.cse && google.search.cse.element
       && google.search.cse.element.getElement('box');
-
     if (ready) {
-      try {
-        const box = google.search.cse.element.getElement('box');
-        box.execute(q);
-        $("status").textContent = '';
-        return true;
-      } catch(e) {
-        // continue to retry
-      }
+      try { google.search.cse.element.getElement('box').execute(q); return true; } catch(e){}
     }
     if (tries < max) return setTimeout(()=>runInPage(q, tries+1), 200);
     return false;
   }
 
   function run(q) {
-    // Try in-page first; if not ready after a short grace period, fall back.
     let usedInPage = false;
-    const attempt = () => {
-      const ok = runInPage(q);
-      if (ok === true) { usedInPage = true; }
-    };
-    attempt();
-
-    // Fallback timer: if after 3200ms we didn’t render, open Google in same tab
-    setTimeout(()=>{
-      if (!usedInPage) {
-        $("fallbackNote").style.display = "block";
-        window.location.href = googleUrl(q);
-      }
-    }, 3200);
+    const ok = runInPage(q);
+    if (ok === true) usedInPage = true;
+    setTimeout(()=>{ if (!usedInPage) { $("fallbackNote").style.display="block"; window.location.href = googleUrl(q); } }, 3200);
   }
 
-  $("run").addEventListener("click", (e)=>{ e.preventDefault(); run(buildQuery()); });
-  $("reset").addEventListener("click", (e)=>{
-    e.preventDefault();
-    $("keywords").value = $("location").value = $("extras").value = "";
-    document.querySelectorAll(".pf").forEach(i=> i.checked = true);
-    run("site:instagram.com OR site:tiktok.com OR site:youtube.com");
-  });
-  $("selftest").addEventListener("click", (e)=>{ e.preventDefault(); run("chef (site:instagram.com OR site:tiktok.com OR site:youtube.com)"); });
+  $("run").onclick = e => { e.preventDefault(); run(buildQuery()); };
+  $("reset").onclick = e => { e.preventDefault(); $("keywords").value=$("location").value=$("extras").value=""; document.querySelectorAll(".pf,.sig").forEach(i=> i.checked=true); run("site:instagram.com OR site:tiktok.com OR site:youtube.com"); };
+  $("selftest").onclick = e => { e.preventDefault(); run("chef"); };
+
+  // Quick pills
+  function renderPills() {
+    const wrap = document.getElementById("quickPills");
+    const domains = ["instagram.com","tiktok.com","youtube.com"];
+    wrap.innerHTML="";
+    domains.forEach(d=>{
+      const b=document.createElement("button");
+      b.textContent=d.replace(".com","").toUpperCase();
+      b.className="btn secondary";
+      b.style.padding="6px 10px";
+      b.onclick=(e)=>{ e.preventDefault();
+        document.querySelectorAll(".pf").forEach(i=> i.checked=(i.value===d));
+        const q=buildQuery(); run(q);
+      };
+      wrap.appendChild(b);
+    });
+  }
+  renderPills();
 </script>
 </body>
 </html>
