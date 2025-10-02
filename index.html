@@ -24,27 +24,53 @@
 
   <!-- Define __gcse BEFORE loading cse.js -->
   <script>
-    window.__gcse = {
-      parsetags: 'explicit',
-      callback: function () {
-        try {
-          google.search.cse.element.render({
-            gname: 'box',
-            div: document.getElementById('cse-searchbox'),
-            tag: 'searchbox-only'
-          });
-          google.search.cse.element.render({
-            gname: 'results',
-            div: document.getElementById('cse-results'),
-            tag: 'searchresults-only',
-            attributes: { enableOrderBy: true, linkTarget: '_blank' }
-          });
-          window.__cseReady = true;
-        } catch (e) {
-          console.error('CSE render error:', e);
+<script>
+  // allow normal searches only after user action
+  window.__allowSearch = false;
+
+  window.__gcse = {
+    parsetags: 'explicit',
+    callback: function () {
+      try {
+        // Render hidden search box and visible results
+        google.search.cse.element.render({
+          gname: 'box',
+          div: document.getElementById('cse-searchbox'),
+          tag: 'searchbox-only'
+        });
+        google.search.cse.element.render({
+          gname: 'results',
+          div: document.getElementById('cse-results'),
+          tag: 'searchresults-only',
+          attributes: { enableOrderBy: true, linkTarget: '_blank' }
+        });
+
+        // Wrap execute() to suppress any automatic first run (e.g., "test")
+        const box = google.search.cse.element.getElement('box');
+        if (box && typeof box.execute === 'function') {
+          const originalExecute = box.execute.bind(box);
+          let firstCallSuppressed = false;
+
+          box.execute = function(q) {
+            const query = (q || '').trim().toLowerCase();
+            // If CSE tries to auto-run (often "test") and user hasn't clicked anything yet, ignore once
+            if (!window.__allowSearch && !firstCallSuppressed) {
+              firstCallSuppressed = true;
+              return; // swallow the auto execution
+            }
+            // Otherwise run normally
+            return originalExecute(q);
+          };
         }
+
+        window.__cseReady = true;
+      } catch (e) {
+        console.error('CSE render error:', e);
       }
-    };
+    }
+  };
+</script>
+
   </script>
   <script async src="https://cse.google.com/cse.js?cx=930c9ba0544ee474b"></script>
 </head>
@@ -170,3 +196,4 @@
 </script>
 </body>
 </html>
+
