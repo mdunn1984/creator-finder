@@ -18,8 +18,8 @@
     .chips{display:flex;flex-wrap:wrap;gap:8px}
     .chip{padding:6px 10px;border-radius:20px;background:#f4f4f4;border:1px solid #ddd}
     .hint{color:#666;font-size:12px}
-    /* hide the built-in search box UI, we’ll drive it via JS */
-    .gcse-searchbox-only, .gsc-control-searchbox-only { display:none !important; height:0 !important; overflow:hidden !important; }
+    .error{color:#b00020}
+    .gcse-searchbox-only,.gsc-control-searchbox-only{display:none!important;height:0!important;overflow:hidden!important}
   </style>
 
   <!-- Define __gcse BEFORE loading cse.js -->
@@ -28,7 +28,6 @@
       parsetags: 'explicit',
       callback: function () {
         try {
-          // Render a hidden search box (gname=box) and a visible results panel (gname=results)
           google.search.cse.element.render({
             gname: 'box',
             div: document.getElementById('cse-searchbox'),
@@ -40,17 +39,17 @@
             tag: 'searchresults-only',
             attributes: { enableOrderBy: true, linkTarget: '_blank' }
           });
-          // Prime (optional): run a trivial query to initialize
-          setTimeout(()=> runSearch('test'), 150);
+          // mark CSE as available
+          window.__cseReady = true;
         } catch (e) {
           console.error('CSE render error:', e);
-          document.getElementById('status').textContent = 'Could not render Google search UI. Try disabling ad/tracking blockers for this site.';
         }
       }
     };
   </script>
   <!-- Load Google CSE with your cx -->
   <script async src="https://cse.google.com/cse.js?cx=930c9ba0544ee474b"></script>
+  <noscript><style>#cse-results{display:none}</style></noscript>
 </head>
 <body>
 <header>
@@ -80,7 +79,7 @@
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button id="run" class="btn">Run Search</button>
       <button id="reset" class="btn secondary">Reset</button>
-      <button id="selftest" class="btn secondary" title="Quick check that CSE can execute">Test Search</button>
+      <button id="selftest" class="btn secondary">Test Search</button>
     </div>
     <div id="status" class="hint" style="margin-top:8px"></div>
   </section>
@@ -88,10 +87,13 @@
   <!-- Right: Results -->
   <section class="card">
     <h2>Results</h2>
-    <!-- Hidden search box container (rendered but visually hidden via CSS) -->
+    <!-- Hidden search box (we drive it via JS) -->
     <div id="cse-searchbox"></div>
     <!-- Visible results container -->
     <div id="cse-results"></div>
+    <div id="fallbackNote" class="hint" style="margin-top:8px;display:none">
+      Couldn’t load in-page results (likely a content blocker). Opened Google in this tab instead.
+    </div>
   </section>
 </main>
 
@@ -109,15 +111,18 @@
     if (location) parts.push(`("${location}")`);
     if (extras)   parts.push(extras);
     if (platforms.length) parts.push("(" + platforms.join(" OR ") + ")");
-    return parts.join(" ").replace(/\s+/g,' ').trim()
-      || "site:instagram.com OR site:tiktok.com OR site:youtube.com";
+    const q = parts.join(" ").replace(/\s+/g,' ').trim();
+    return q || "site:instagram.com OR site:tiktok.com OR site:youtube.com";
   }
 
-  // Drive the hidden searchbox element (gname='box'), which in turn updates the results element
-  function runSearch(q, tries=0) {
-    const max = 30;
-    const ready = window.google
-      && google.search && google.search.cse && google.search.cse.element
+  function googleUrl(q) {
+    return "https://www.google.com/search?q=" + encodeURIComponent(q);
+  }
+
+  function runInPage(q, tries=0) {
+    const max = 30; // ~6s
+    const ready = window.__cseReady
+      && window.google && google.search && google.search.cse && google.search.cse.element
       && google.search.cse.element.getElement('box');
 
     if (ready) {
@@ -125,23 +130,41 @@
         const box = google.search.cse.element.getElement('box');
         box.execute(q);
         $("status").textContent = '';
-        return;
-      } catch (e) {
-        console.warn('execute() failed; retrying…', e);
+        return true;
+      } catch(e) {
+        // continue to retry
       }
     }
-    if (tries < max) setTimeout(()=>runSearch(q, tries+1), 200);
-    else $("status").textContent = 'Could not initialize Google widget. Try a different browser or disable blockers.';
+    if (tries < max) return setTimeout(()=>runInPage(q, tries+1), 200);
+    return false;
   }
 
-  $("run").addEventListener("click", (e)=>{ e.preventDefault(); runSearch(buildQuery()); });
+  function run(q) {
+    // Try in-page first; if not ready after a short grace period, fall back.
+    let usedInPage = false;
+    const attempt = () => {
+      const ok = runInPage(q);
+      if (ok === true) { usedInPage = true; }
+    };
+    attempt();
+
+    // Fallback timer: if after 3200ms we didn’t render, open Google in same tab
+    setTimeout(()=>{
+      if (!usedInPage) {
+        $("fallbackNote").style.display = "block";
+        window.location.href = googleUrl(q);
+      }
+    }, 3200);
+  }
+
+  $("run").addEventListener("click", (e)=>{ e.preventDefault(); run(buildQuery()); });
   $("reset").addEventListener("click", (e)=>{
     e.preventDefault();
     $("keywords").value = $("location").value = $("extras").value = "";
     document.querySelectorAll(".pf").forEach(i=> i.checked = true);
-    runSearch("site:instagram.com OR site:tiktok.com OR site:youtube.com");
+    run("site:instagram.com OR site:tiktok.com OR site:youtube.com");
   });
-  $("selftest").addEventListener("click", (e)=>{ e.preventDefault(); runSearch("chef"); });
+  $("selftest").addEventListener("click", (e)=>{ e.preventDefault(); run("chef (site:instagram.com OR site:tiktok.com OR site:youtube.com)"); });
 </script>
 </body>
 </html>
