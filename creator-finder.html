@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Creator Finder – Search URL Builder</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { --fg: #0b0b0f; --sub:#5b5b66; --bg:#fafafa; --card:#ffffff; --bd:#e6e6ee; --mut:#f4f4f8; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 15px/1.35 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color:var(--fg); background:var(--bg); }
+    header { padding: 24px; border-bottom: 1px solid var(--bd); background: var(--card); position: sticky; top: 0; z-index: 9; }
+    h1 { margin: 0 0 6px; font-size: 20px; }
+    p.sub { margin: 0; color: var(--sub); }
+    main { max-width: 1100px; margin: 24px auto; padding: 0 16px 40px; }
+    .grid { display: grid; gap: 14px; grid-template-columns: 1fr; }
+    @media(min-width: 880px){ .grid{ grid-template-columns: 2fr 1fr; } }
+    .card { background: var(--card); border: 1px solid var(--bd); border-radius: 12px; padding: 16px; }
+    .row { display: grid; gap: 10px; grid-template-columns: 1fr; margin-bottom: 12px; }
+    @media(min-width:700px){ .row.two{ grid-template-columns: 1fr 1fr; } .row.three{ grid-template-columns: 1fr 1fr 1fr; } }
+    label { font-weight: 600; display: block; margin-bottom: 6px; }
+    input[type=text], select, textarea {
+      width: 100%; border:1px solid var(--bd); border-radius:10px; padding:10px 12px; background:#fff; outline:none;
+    }
+    textarea { min-height: 70px; resize: vertical; }
+    .chips { display:flex; flex-wrap:wrap; gap:8px; }
+    .chip { background: var(--mut); border:1px solid var(--bd); border-radius:999px; padding:8px 10px; display:inline-flex; align-items:center; gap:8px; }
+    .chip input { margin:0; }
+    .btn { display:inline-block; padding:10px 14px; border-radius:10px; border:1px solid var(--bd); background:#111; color:#fff; cursor:pointer; text-decoration:none; font-weight:600; }
+    .btn.secondary { background:#fff; color:#111; }
+    .links a { display:block; padding:10px 12px; border:1px solid var(--bd); border-radius:10px; text-decoration:none; color:#111; background:#fff; }
+    .links a + a { margin-top:8px; }
+    small.hint { color: var(--sub); display:block; margin-top:4px; }
+    .inline { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Creator Finder – Search URL Builder</h1>
+    <p class="sub">Generate smart Google/Bing/TikTok/YouTube searches for creators by niche, location, and signals (email, “business inquiries”, etc.).</p>
+  </header>
+
+  <main>
+    <div class="grid">
+      <!-- FORM -->
+      <section class="card">
+        <h2 style="margin-top:0">Criteria</h2>
+
+        <div class="row">
+          <div>
+            <label for="keywords">Niche / Keywords</label>
+            <input id="keywords" type="text" placeholder='e.g., "chef", "mom life", "home workouts", "mens fashion"' />
+            <small class="hint">Use commas to separate ideas. We’ll OR-group them automatically.</small>
+          </div>
+        </div>
+
+        <div class="row two">
+          <div>
+            <label for="location">Location (optional)</label>
+            <input id="location" type="text" placeholder='e.g., "New Jersey", "Los Angeles", "UK"' />
+          </div>
+          <div>
+            <label for="language">Language (optional)</label>
+            <input id="language" type="text" placeholder='e.g., "English", "Spanish"' />
+          </div>
+        </div>
+
+        <div class="row two">
+          <div>
+            <label for="signals">Contactability Signals</label>
+            <div class="chips">
+              <label class="chip"><input type="checkbox" class="sig" value='"email"' checked> email</label>
+              <label class="chip"><input type="checkbox" class="sig" value='"business inquiries"' checked> business inquiries</label>
+              <label class="chip"><input type="checkbox" class="sig" value='"management"' > management</label>
+              <label class="chip"><input type="checkbox" class="sig" value='"partnerships"'> partnerships</label>
+              <label class="chip"><input type="checkbox" class="sig" value='"collab" OR "collaboration"'> collaboration</label>
+            </div>
+            <small class="hint">These are added as quoted phrases to bias toward profiles with contact info.</small>
+          </div>
+          <div>
+            <label for="freshness">Recency</label>
+            <select id="freshness">
+              <option value="">Any time</option>
+              <option value="qdr:w">Past week</option>
+              <option value="qdr:m">Past month</option>
+              <option value="qdr:y">Past year</option>
+            </select>
+            <small class="hint">Applies to Google searches via the <code>tbs</code> parameter.</small>
+          </div>
+        </div>
+
+        <div class="row two">
+          <div>
+            <label>Platforms to Search</label>
+            <div class="chips">
+              <label class="chip"><input type="checkbox" class="pf" value="instagram.com" checked> Instagram</label>
+              <label class="chip"><input type="checkbox" class="pf" value="tiktok.com" checked> TikTok</label>
+              <label class="chip"><input type="checkbox" class="pf" value="youtube.com" checked> YouTube</label>
+              <label class="chip"><input type="checkbox" class="pf" value="twitch.tv"> Twitch</label>
+              <label class="chip"><input type="checkbox" class="pf" value="x.com"> X (Twitter)</label>
+            </div>
+          </div>
+          <div>
+            <label for="extras">Extra Terms (optional)</label>
+            <input id="extras" type="text" placeholder='e.g., "UGC", "brand ambassa­dor", "recipe", "tutorial"' />
+          </div>
+        </div>
+
+        <div class="row two">
+          <div>
+            <label for="minFollowers">Min Followers (soft filter)</label>
+            <input id="minFollowers" type="text" placeholder="e.g., 10000 or 50k or 1m" />
+            <small class="hint">Search can’t enforce counts, but we’ll add helpful tokens like “k followers”, “m followers”.</small>
+          </div>
+          <div>
+            <label for="engagement">Engagement Words (optional)</label>
+            <input id="engagement" type="text" placeholder='e.g., "engagement rate", "avg likes", "views"' />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="inline">
+            <button id="build" class="btn">Build Search Links</button>
+            <button id="reset" class="btn secondary">Reset</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- LINKS -->
+      <aside class="card">
+        <h2 style="margin-top:0">Search Links</h2>
+        <div id="links" class="links">
+          <p style="color:#666">Fill the form and click <b>Build Search Links</b> — your links will appear here.</p>
+        </div>
+        <small class="hint">Tip: open links in new tabs and compare results. Use the General Web search to find press/features/Linktrees with contact info.</small>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const el = (id) => document.getElementById(id);
+    const esc = (s) => encodeURIComponent(s.trim());
+
+    function tokenize(listStr, wrapQuotes=false){
+      const arr = (listStr||"").split(",").map(s=>s.trim()).filter(Boolean);
+      if(!arr.length) return "";
+      if(wrapQuotes){ return "(" + arr.map(v => `"${v}"`).join(" OR ") + ")"; }
+      return "(" + arr.map(v => v.includes(" ") ? `"${v}"` : v).join(" OR ") + ")";
+    }
+
+    function followersTokens(min){
+      if(!min) return "";
+      let s = String(min).toLowerCase().trim();
+      // Normalize common shorthands
+      s = s.replace(/[, ]/g,"");
+      const hasK = s.endsWith("k");
+      const hasM = s.endsWith("m");
+      let num = parseFloat(s);
+      if(isNaN(num)) return '("k followers" OR "m followers" OR followers)';
+      if(hasK) num = Math.round(num); // 10k, 25k
+      if(hasM) num = num * 1000; // 1m -> 1000k
+      // Build soft tokens
+      const buckets = [];
+      if(num >= 1000) buckets.push('"k followers"');
+      if(num >= 1000000) buckets.push('"m followers"');
+      buckets.push("followers"); // always include generic
+      return "(" + Array.from(new Set(buckets)).join(" OR ") + ")";
+    }
+
+    function buildGoogleQuery(opts){
+      const {keywords, location, language, signals, extras, followers, engagement, platforms} = opts;
+
+      const k = tokenize(keywords,true);
+      const loc = location ? `("${location}")` : "";
+      const lang = language ? `("${language}")` : "";
+      const sig = signals.length ? "(" + signals.join(" OR ") + ")" : "";
+      const ex = tokenize(extras,true);
+      const foll = followersTokens(followers);
+      const eng = tokenize(engagement,true);
+
+      const terms = [k, loc, lang, sig, ex, foll, eng].filter(Boolean).join(" ");
+      const site = platforms.length ? "(" + platforms.map(p => `site:${p}`).join(" OR ") + ")" : "";
+
+      // Avoid login walls / noise for some platforms
+      const minus = [
+        "-inurl:/login", "-inurl:/accounts", "-inurl:/signup",
+        "-intitle:login", "-intitle:sign", "-site:help.instagram.com"
+      ].join(" ");
+
+      return [site, terms, minus].filter(Boolean).join(" ");
+    }
+
+    function googleURL(q, freshness){
+      const base = "https://www.google.com/search?q=" + esc(q);
+      return freshness ? `${base}&tbs=${freshness}` : base;
+    }
+
+    function bingURL(q){
+      return "https://www.bing.com/search?q=" + esc(q);
+    }
+
+    function ytURL(keywords, extras, freshness){
+      const q = [keywords, extras].filter(Boolean).join(", ");
+      // sp=CAI%253D (Upload date) is complex; simplest is general query
+      const url = "https://www.youtube.com/results?search_query=" + esc(q);
+      return url + (freshness ? "" : "");
+    }
+
+    function tiktokURL(keywords, location){
+      const q = [keywords, location].filter(Boolean).join(", ");
+      return "https://www.tiktok.com/search?q=" + esc(q);
+    }
+
+    function makeLink(href, label){
+      const a = document.createElement("a");
+      a.href = href; a.target = "_blank"; a.rel = "noopener"; a.textContent = label;
+      return a;
+    }
+
+    function build(){
+      const keywords = el("keywords").value;
+      const location = el("location").value;
+      const language = el("language").value;
+      const freshness = el("freshness").value;
+      const extras = el("extras").value;
+      const minFollowers = el("minFollowers").value;
+      const engagement = el("engagement").value;
+
+      const signals = Array.from(document.querySelectorAll(".sig:checked")).map(i => i.value);
+      const platforms = Array.from(document.querySelectorAll(".pf:checked")).map(i => i.value);
+
+      const q = buildGoogleQuery({
+        keywords, location, language,
+        signals, extras, followers: minFollowers, engagement, platforms
+      });
+
+      const links = el("links");
+      links.innerHTML = "";
+
+      // General Google & Bing
+      links.appendChild(makeLink(googleURL(q, freshness), "Google – General (multi-platform)"));
+      links.appendChild(makeLink(bingURL(q), "Bing – General (backup engine)"));
+
+      // Platform-specific Google searches (site filters split out)
+      const perPlatform = (domain) => {
+        const pq = q.replace(/\(site:[^)]+\)/, `site:${domain}`); // narrow to one site
+        links.appendChild(makeLink(googleURL(pq, freshness), `Google – ${domain}`));
+      };
+      Array.from(document.querySelectorAll(".pf:checked")).forEach(i => perPlatform(i.value));
+
+      // Native platform searches (where useful)
+      links.appendChild(makeLink(ytURL(keywords, extras, freshness), "YouTube – native search"));
+      links.appendChild(makeLink(tiktokURL(keywords, location), "TikTok – native search"));
+
+      // Bonus “contact first” query
+      const contactFirst = q + ' ("email me" OR "email us" OR "for business" OR "mgmt" OR "press")';
+      links.appendChild(makeLink(googleURL(contactFirst, freshness), "Google – Biased to contactable profiles"));
+    }
+
+    document.getElementById("build").addEventListener("click", (e)=>{ e.preventDefault(); build(); });
+    document.getElementById("reset").addEventListener("click", (e)=>{
+      e.preventDefault();
+      document.querySelector("form")?.reset();
+      // crude reset:
+      el("keywords").value = "";
+      el("location").value = "";
+      el("language").value = "";
+      el("extras").value = "";
+      el("minFollowers").value = "";
+      el("engagement").value = "";
+      document.querySelectorAll(".sig").forEach(i=> i.checked = (i.value === '"email"' || i.value === '"business inquiries"'));
+      document.querySelectorAll(".pf").forEach(i=> i.checked = (["instagram.com","tiktok.com","youtube.com"].includes(i.value)));
+      el("freshness").value = "";
+      el("links").innerHTML = '<p style="color:#666">Cleared. Enter criteria and click <b>Build Search Links</b>.</p>';
+    });
+  </script>
+</body>
+</html>
