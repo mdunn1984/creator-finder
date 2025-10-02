@@ -1,95 +1,57 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>Creator Finder – In-Page Results</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body{margin:0;font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#fafafa;color:#111}
-    header{padding:20px;background:#fff;border-bottom:1px solid #ddd;position:sticky;top:0}
-    h1{margin:0;font-size:20px}
-    main{max-width:1200px;margin:20px auto;padding:0 16px;display:grid;gap:20px;grid-template-columns:350px 1fr}
-    .card{background:#fff;border:1px solid #ddd;border-radius:10px;padding:16px}
-    label{font-weight:600;margin-bottom:4px;display:block}
-    input,select{width:100%;padding:8px;border:1px solid #ccc;border-radius:8px;margin-bottom:12px}
-    button{padding:10px 14px;border-radius:8px;border:1px solid #ccc;cursor:pointer;font-weight:600}
-    .btn{background:#111;color:#fff}
-    .btn.secondary{background:#fff;color:#111}
-    .chips{display:flex;flex-wrap:wrap;gap:8px}
-    .chip{padding:6px 10px;border-radius:20px;background:#f4f4f4;border:1px solid #ddd}
-  </style>
-  <!-- Google CSE script with your cx -->
-  <script async src="https://cse.google.com/cse.js?cx=930c9ba0544ee474b"></script>
-</head>
-<body>
-<header>
-  <h1>Creator Finder – Search Builder</h1>
-</header>
-
-<main>
-  <!-- Left: Form -->
-  <section class="card">
-    <h2>Criteria</h2>
-    <label>Niche / Keywords</label>
-    <input id="keywords" placeholder='e.g. "chef", "fitness mom"'>
-
-    <label>Location</label>
-    <input id="location" placeholder='e.g. "New Jersey"'>
-
-    <label>Extras</label>
-    <input id="extras" placeholder='e.g. "UGC", "brand ambassador"'>
-
-    <label>Platforms</label>
-    <div class="chips">
-      <label class="chip"><input type="checkbox" class="pf" value="instagram.com" checked> Instagram</label>
-      <label class="chip"><input type="checkbox" class="pf" value="tiktok.com" checked> TikTok</label>
-      <label class="chip"><input type="checkbox" class="pf" value="youtube.com" checked> YouTube</label>
-    </div>
-
-    <button id="run" class="btn">Run Search</button>
-    <button id="reset" class="btn secondary">Reset</button>
-  </section>
-
-  <!-- Right: Results -->
-  <section class="card">
-    <h2>Results</h2>
-    <div class="gcse-searchresults-only"></div>
-  </section>
-</main>
-
 <script>
   const $ = id => document.getElementById(id);
 
   function buildQuery() {
-    const keywords = $("keywords").value;
-    const location = $("location").value;
-    const extras   = $("extras").value;
+    const keywords = $("keywords").value.trim();
+    const location = $("location").value.trim();
+    const extras   = $("extras").value.trim();
     const platforms = Array.from(document.querySelectorAll(".pf:checked")).map(p=>`site:${p.value}`);
-    return [keywords, location, extras, "(" + platforms.join(" OR ") + ")"].filter(Boolean).join(" ");
+
+    const parts = [];
+    if (keywords) parts.push(keywords);
+    if (location) parts.push(`("${location}")`);
+    if (extras)   parts.push(extras);
+    if (platforms.length) parts.push("(" + platforms.join(" OR ") + ")");
+    return parts.join(" ").replace(/\s+/g, " ").trim()
+      || "site:instagram.com OR site:tiktok.com OR site:youtube.com";
   }
 
-  function runSearch() {
-    const q = buildQuery();
-    if(window.google && google.search && google.search.cse){
-      const el = google.search.cse.element.getElement("standard0");
-      if(el) el.execute(q);
+  function runSearch(q, attempts=0) {
+    const maxAttempts = 25; // ~5s
+    const ready = window.google
+      && google.search && google.search.cse && google.search.cse.element
+      && google.search.cse.element.getElement('standard0');
+
+    if (ready) {
+      try { google.search.cse.element.getElement('standard0').execute(q); return; } catch(e){}
     }
+    if (attempts < maxAttempts) setTimeout(()=>runSearch(q, attempts+1), 200);
   }
 
-  $("run").onclick = e => { e.preventDefault(); runSearch(); }
-  $("reset").onclick = e => { e.preventDefault(); $("keywords").value="";$("location").value="";$("extras").value="";document.querySelectorAll(".pf").forEach(i=>i.checked=true); runSearch(); }
+  $("run").addEventListener("click", (e)=>{ e.preventDefault(); runSearch(buildQuery()); });
+  $("reset").addEventListener("click", (e)=>{
+    e.preventDefault();
+    $("keywords").value = $("location").value = $("extras").value = "";
+    document.querySelectorAll(".pf").forEach(i=>i.checked = true);
+    runSearch("site:instagram.com OR site:tiktok.com OR site:youtube.com");
+  });
 
-  // Ensure the CSE element is rendered
+  // Render results element explicitly, then prime once
   window.__gcse = {
-    callback: () => {
-      google.search.cse.element.render({
-        div: document.querySelector(".gcse-searchresults-only"),
-        tag: "searchresults-only",
-        attributes: { enableOrderBy: true }
-      });
+    parsetags: 'explicit',
+    callback: function() {
+      try {
+        google.search.cse.element.render({
+          div: document.querySelector('.gcse-searchresults-only'),
+          tag: 'searchresults-only',
+          attributes: { enableOrderBy: true }
+        });
+        runSearch("test"); // prime
+      } catch(e) { console.error(e); }
     }
   };
 </script>
-</body>
+
 </html>
+
 
