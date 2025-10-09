@@ -36,19 +36,19 @@
     .hint{font-size:12px;color:#64748b;margin-top:6px}
     .badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:700}
   </style>
-  
-  <!-- Google CSE (replace cx below) -->
+
+  <!-- Google CSE (put your real ID below) -->
   <script async src="https://cse.google.com/cse.js?cx=930c9ba0544ee474b"></script>
 </head>
 <body>
   <header><h1>Creator Finder — Search + Analytics</h1></header>
-  
+
   <main>
     <!-- LEFT: Search -->
     <section class="panel pad" aria-label="Creator Search">
       <h2>Find Creators</h2>
       <div id="cse-searchbox"></div>
-      <div class="hint">Tip: search like <b>site:tiktok.com @handle</b> or <b>site:instagram.com "creator name"</b>.</div>
+      <div class="hint">Tip: search like <b>site:tiktok.com @handle</b> or <b>site:instagram.com \"creator name\"</b>.</div>
       <div id="cse-results" style="margin-top:10px"></div>
       <script>
         window.__gcse = { parsetags: 'explicit', callback: function(){
@@ -59,7 +59,7 @@
         }};
       </script>
     </section>
-    
+
     <!-- RIGHT: Analytics -->
     <section class="panel pad" aria-label="Analytics">
       <h2>Analytics</h2>
@@ -207,6 +207,7 @@
       const mode = els.mode.value; // public | verified
       if(!profile){ setAlert('Enter a profile URL or @handle.'); return; }
 
+      // IMPORTANT: If your backend is on a different domain, replace "/api" with your full backend origin
       const endpoint = `/api/${mode}/${platform}`;
       try{
         const res = await fetch(endpoint, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ profile, window:n, usPercent: Number(els.usPercent.value)||null }) });
@@ -257,238 +258,5 @@
   </script>
 </body>
 </html>
-```
-
-**Replace** `REPLACE_WITH_YOUR_CSE_ID` with your Google CSE ID.
-
----
-
-## 2) Backend — Node/Express starter (deploy to Vercel/Render/Netlify Functions)
-
-Create a folder for the backend and add these files:
-
-### `package.json`
-
-```json
-{
-  "name": "creator-finder-backend",
-  "version": "1.0.0",
-  "type": "module",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js",
-    "dev": "NODE_OPTIONS=--watch node server.js"
-  },
-  "dependencies": {
-    "cross-fetch": "^4.0.0",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2"
-  }
-}
-```
-
-### `server.js`
-
-```js
-import express from 'express';
-import fetch from 'cross-fetch';
-import dotenv from 'dotenv';
-import { publicInstagram, publicTikTok } from './src/public-adapters.js';
-import { verifiedInstagram } from './src/verified-instagram.js';
-import { verifiedTikTok } from './src/verified-tiktok.js';
-
-dotenv.config();
-
-const app = express();
-app.use(express.json({ limit: '1mb' }));
-
-// Health
-app.get('/api/health', (_,res)=>res.json({ ok:true }));
-
-// Public mode (no login) — returns what’s visible without auth
-app.post('/api/public/instagram', async (req,res)=>{
-  try{
-    const { profile, window=14 } = req.body||{};
-    const data = await publicInstagram({ profile, window });
-    res.json({ platform:'instagram', mode:'public', erFormula:'(likes + comments) / views (when visible)', ...data });
-  }catch(e){ res.status(501).send(e.message||'Public Instagram adapter not implemented'); }
-});
-
-app.post('/api/public/tiktok', async (req,res)=>{
-  try{
-    const { profile, window=14 } = req.body||{};
-    const data = await publicTikTok({ profile, window });
-    res.json({ platform:'tiktok', mode:'public', erFormula:'(likes + comments + shares) / views (when visible)', ...data });
-  }catch(e){ res.status(501).send(e.message||'Public TikTok adapter not implemented'); }
-});
-
-// Verified mode (creator connects)
-app.post('/api/verified/instagram', async (req,res)=>{
-  try{
-    const { igUserId, accessToken, window=14 } = req.body||{};
-    const data = await verifiedInstagram({ igUserId, accessToken, window });
-    res.json({ platform:'instagram', mode:'verified', erFormula:'(likes + comments) / video_views (IG insights)', ...data });
-  }catch(e){ res.status(400).send(e.message||'Instagram verified error'); }
-});
-
-app.post('/api/verified/tiktok', async (req,res)=>{
-  try{
-    const { accessToken, advertiserId, businessAccountId, window=14 } = req.body||{};
-    const data = await verifiedTikTok({ accessToken, advertiserId, businessAccountId, window });
-    res.json({ platform:'tiktok', mode:'verified', erFormula:'(likes + comments + shares) / views (TikTok analytics)', ...data });
-  }catch(e){ res.status(400).send(e.message||'TikTok verified error'); }
-});
-
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, ()=> console.log(`Creator Finder backend on http://localhost:${PORT}`));
-```
-
-### `src/public-adapters.js`
-
-```js
-// Public collectors SHOULD use a compliant approach (e.g., your own Puppeteer/Playwright on your server
-// honoring robots/terms, or a data provider). Most platforms block raw scraping and/or require consent.
-// For now, these return 501 Not Implemented with guidance.
-
-export async function publicInstagram({ profile, window }){
-  throw new Error('Public Instagram collection requires a compliant data source (e.g., IG oEmbed is insufficient for views). Use Verified mode or integrate a provider.');
-}
-
-export async function publicTikTok({ profile, window }){
-  throw new Error('Public TikTok collection requires a compliant data source or the official API for connected accounts. Use Verified mode or integrate a provider.');
-}
-```
-
-### `src/verified-instagram.js`
-
-```js
-// Minimal IG Graph API flow for connected Business/Creator accounts.
-// You’ll supply igUserId + accessToken obtained via OAuth (outside scope here).
-// Docs: https://developers.facebook.com/docs/instagram-api/
-
-import fetch from 'cross-fetch';
-
-export async function verifiedInstagram({ igUserId, accessToken, window=14 }){
-  if(!igUserId || !accessToken) throw new Error('Missing igUserId or accessToken');
-
-  // 1) Audience country (lifetime)
-  const aud = await igGet(`/v19.0/${igUserId}/insights?metric=audience_country&period=lifetime`, accessToken);
-  const countries = (aud.data?.[0]?.values?.[0]?.value) || {};
-  const total = Object.values(countries).reduce((a,b)=>a+Number(b||0),0);
-  const us = Number(countries.US||0);
-  const usPercent = total>0 ? (us/total)*100 : null;
-
-  // 2) Recent media
-  const media = await igGet(`/v19.0/${igUserId}/media?fields=id,caption,media_type,media_product_type,timestamp&limit=${window}`, accessToken);
-
-  // 3) For each media, get counts
-  const posts = [];
-  for(const m of (media.data||[]).slice(0, window)){
-    const meta = await igGet(`/v19.0/${m.id}?fields=like_count,comments_count,permalink,media_type,media_product_type,timestamp`, accessToken);
-
-    // Video/Reel views via insights (availability may vary by type)
-    let views = null;
-    try{
-      const ins = await igGet(`/v19.0/${m.id}/insights?metric=video_views,plays,reach`, accessToken);
-      const map = Object.fromEntries((ins.data||[]).map(x=>[x.name, x.values?.[0]?.value]));
-      views = map.video_views ?? map.plays ?? null;
-    }catch{ /* not a video/reel or permission missing */ }
-
-    const likes = meta.like_count ?? null;
-    const comments = meta.comments_count ?? null;
-    const shares = null; // IG Graph does not expose shares count for posts
-
-    // ER (IG): (likes + comments) / views (fallback to null if no views)
-    const er = (views && views>0) ? ((Number(likes||0)+Number(comments||0))/Number(views)) : null;
-
-    posts.push({
-      id: m.id,
-      title: (m.caption||'').slice(0,60),
-      url: meta.permalink,
-      published: (new Date(m.timestamp)).toISOString().slice(0,10),
-      views, likes, comments, shares, er
-    });
-  }
-
-  return { usPercent, posts };
-}
-
-async function igGet(path, token){
-  const url = `https://graph.facebook.com${path}&access_token=${encodeURIComponent(token)}`;
-  const r = await fetch(url);
-  if(!r.ok){ throw new Error(await r.text()); }
-  return r.json();
-}
-```
-
-### `src/verified-tiktok.js`
-
-```js
-// TikTok for Developers / Business API placeholder. You must complete OAuth and request the right scopes.
-// Docs vary by product; use endpoints that list recent videos and analytics for the connected account.
-
-export async function verifiedTikTok({ accessToken, advertiserId, businessAccountId, window=14 }){
-  if(!accessToken) throw new Error('Missing TikTok accessToken');
-  // Depending on product, you’ll:
-  // 1) List recent posts for the connected account
-  // 2) For each, fetch stats: views, likes, comments, shares
-  // 3) Compute ER = (likes + comments + shares) / views
-  // 4) Audience geography may require Ads/Business permissions
-
-  // Return a minimal shape so the UI works while you wire real calls
-  return {
-    usPercent: null, // fill when you can fetch audience_country
-    posts: [] // array of { published, title/id, url, views, likes, comments, shares, er }
-  };
-}
-```
-
-### `.env` (local only)
-
-```
-# Example placeholders — do NOT commit real tokens
-IG_APP_ID=xxx
-IG_APP_SECRET=xxx
-IG_REDIRECT_URI=https://yourapp.com/ig/callback
-TIKTOK_CLIENT_KEY=xxx
-TIKTOK_CLIENT_SECRET=xxx
-TIKTOK_REDIRECT_URI=https://yourapp.com/tiktok/callback
-```
-
----
-
-## 3) How to deploy & wire
-
-1. **Frontend**: Push `index.html` to your `creator-finder` GitHub Pages repo (or Netlify). Replace the CSE ID.
-2. **Backend**: Deploy the Express app to **Vercel**/**Render**/**Railway**. Expose `/api/*` routes.
-3. **Connect the two**: If your backend domain differs (e.g., `https://cf-backend.onrender.com`), update the frontend endpoints: replace `fetch('/api/...')` with the full origin.
-4. **Verified mode**: Add OAuth flows (IG + TikTok). Pass the resulting tokens to `/api/verified/*` endpoints.
-5. **Public mode** (optional): Integrate a compliant collector (Playwright/Puppeteer on your server or a provider). Replace the `public-adapters` stubs so the endpoints return arrays of recent posts with visible counts.
-
----
-
-## 4) ER formulas used
-
-* **Instagram (Verified):** `(likes + comments) / video_views` (for video/reels). If a post lacks views, ER returns `null`.
-* **TikTok (Verified):** `(likes + comments + shares) / views`.
-* **Public Mode:** Same formulas but only when those counts are publicly visible.
-
----
-
-## 5) Notes & upgrades
-
-* Add a **Login with Instagram / TikTok** button and store tokens securely (server-side) per connected creator.
-* Cache responses (e.g., 1–6 hours) to reduce API calls.
-* Add **trend lines** (sparkline of last 30 posts).
-* Use **webhooks** where supported to refresh metrics.
-* Add a **lookup sidebar** that auto-detects platform from pasted URL.
-
----
-
-**You’re set.** Frontend goes to GitHub Pages; backend to Vercel/Render. Replace the placeholders and you’ll have Creator Finder as a search engine **and** an analytics panel with Public estimates + Verified accuracy when creators connect.
-
-</body>
-</html>
-
 
 
