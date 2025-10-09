@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Creator Finder — Search + Analytics</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f6f8fb;
+      color: #0f172a;
+    }
+    header {
+      background: #0b1220;
+      color: #fff;
+      padding: 16px;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+    }
+    main {
+      max-width: 1000px;
+      margin: 20px auto;
+      padding: 0 16px;
+    }
+    .panel {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    h2 { margin-top: 0; }
+    label { font-weight: 600; font-size: 14px; display:block; margin-bottom:4px; }
+    input, select, button {
+      width: 100%;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
+    button {
+      background: #2563eb;
+      color: #fff;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+    }
+    button:disabled { background: #94a3b8; cursor:not-allowed; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { padding: 8px; border-bottom: 1px solid #eee; font-size: 14px; }
+    th { background: #f8fafc; text-align: left; }
+    .right { text-align: right; }
+  </style>
+
+  <!-- Google CSE with your ID -->
+  <script async src="https://cse.google.com/cse.js?cx=930c9ba0544ee474b"></script>
+</head>
+<body>
+  <header>Creator Finder — Search + Analytics</header>
+
+  <main>
+    <!-- Search -->
+    <section class="panel">
+      <h2>Find Creators</h2>
+      <div class="gcse-search"></div>
+      <p><small>Tip: search like <b>site:tiktok.com @handle</b> or <b>site:instagram.com "creator name"</b>.</small></p>
+    </section>
+
+    <!-- If you only want search results, use this line instead of the combined search box -->
+    <!-- <div class="gcse-searchresults-only"></div> -->
+
+    <!-- Analytics panel placeholder (connects to backend if deployed) -->
+    <section class="panel">
+      <h2>Analytics</h2>
+      <label for="platform">Platform</label>
+      <select id="platform">
+        <option value="instagram">Instagram</option>
+        <option value="tiktok">TikTok</option>
+      </select>
+
+      <label for="profile">Profile URL / Handle</label>
+      <input id="profile" placeholder="e.g. https://www.instagram.com/creator/ or @creator" />
+
+      <label for="window">Data window</label>
+      <select id="window">
+        <option value="14">Last 14 posts</option>
+        <option value="30">Last 30 posts</option>
+      </select>
+
+      <label for="usPercent">US Audience % (manual if public mode)</label>
+      <input id="usPercent" type="number" min="0" max="100" step="0.1" placeholder="Paste % if you have it" />
+
+      <label for="mode">Mode</label>
+      <select id="mode">
+        <option value="public">Public (no login)</option>
+        <option value="verified">Verified (owner connected)</option>
+      </select>
+
+      <button id="analyze">Analyze</button>
+      <button id="exportCsv" disabled>Export CSV</button>
+      <button id="requestAccess">Request Access from Creator</button>
+
+      <h3>Results</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Published</th>
+            <th>Post</th>
+            <th class="right">Views</th>
+            <th class="right">Likes</th>
+            <th class="right">Comments</th>
+            <th class="right">Shares</th>
+            <th class="right">ER</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>
+
