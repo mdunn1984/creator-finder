@@ -5,258 +5,124 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Creator Finder — Search + Analytics</title>
   <style>
-    :root{--bg:#0b1220;--ink:#0f172a;--mut:#64748b;--card:#ffffff;--accent:#2563eb}
-    *{box-sizing:border-box}
-    body{margin:0;background:#f6f8fb;color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
-    header{position:sticky;top:0;z-index:10;background:var(--bg);color:#fff;padding:14px 18px;box-shadow:0 2px 10px rgba(0,0,0,.25)}
-    header h1{margin:0;font-size:18px}
-    main{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;max-width:1200px;margin:20px auto;padding:0 16px}
-    @media(max-width:960px){main{grid-template-columns:1fr}}
-    .panel{background:var(--card);border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 6px 24px rgba(2,6,23,.06)}
-    .pad{padding:16px}
-    h2{margin:0 0 10px;font-size:16px}
-    label{font-weight:600;font-size:13px;color:#0f172a}
-    input,select,button{width:100%;padding:10px 12px;border-radius:12px;border:1px solid #e5e7eb;background:#fff}
-    input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
-    button{background:var(--accent);border:0;color:#fff;font-weight:700;cursor:pointer}
-    button:disabled{background:#94a3b8;cursor:not-allowed}
-    .row{display:grid;gap:10px}
-    @media(min-width:800px){.row{grid-template-columns:1fr 1fr}}
-    .k{font-size:12px;color:var(--mut);margin:0}
-    .v{font-size:26px;font-weight:800;margin:2px 0 0}
-    .tiny{font-size:12px;color:var(--mut)}
-    .grid{display:grid;gap:12px;grid-template-columns:repeat(3,minmax(0,1fr))}
-    .list{border:1px solid #e5e7eb;border-radius:14px;overflow:hidden}
-    table{width:100%;border-collapse:collapse;font-size:14px}
-    th,td{padding:10px 12px;border-bottom:1px solid #eef2f7;text-align:left}
-    th{background:#f8fafc;font-weight:700}
-    .right{text-align:right}
-    .error{background:#fee2e2;color:#7f1d1d;border:1px solid #fecaca;padding:10px 12px;border-radius:12px;margin-top:10px}
-    .mut{color:#64748b}
-    .hint{font-size:12px;color:#64748b;margin-top:6px}
-    .badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:700}
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f6f8fb;
+      color: #0f172a;
+    }
+    header {
+      background: #0b1220;
+      color: #fff;
+      padding: 16px;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+    }
+    main {
+      max-width: 1000px;
+      margin: 20px auto;
+      padding: 0 16px;
+    }
+    .panel {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    h2 { margin-top: 0; }
+    label { font-weight: 600; font-size: 14px; display:block; margin-bottom:4px; }
+    input, select, button {
+      width: 100%;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
+    button {
+      background: #2563eb;
+      color: #fff;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+    }
+    button:disabled { background: #94a3b8; cursor:not-allowed; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { padding: 8px; border-bottom: 1px solid #eee; font-size: 14px; }
+    th { background: #f8fafc; text-align: left; }
+    .right { text-align: right; }
   </style>
 
-  <!-- Google CSE (put your real ID below) -->
+  <!-- Google CSE with your ID -->
   <script async src="https://cse.google.com/cse.js?cx=930c9ba0544ee474b"></script>
 </head>
 <body>
-  <header><h1>Creator Finder — Search + Analytics</h1></header>
+  <header>Creator Finder — Search + Analytics</header>
 
   <main>
-    <!-- LEFT: Search -->
-    <section class="panel pad" aria-label="Creator Search">
+    <!-- Search -->
+    <section class="panel">
       <h2>Find Creators</h2>
-      <div id="cse-searchbox"></div>
-      <div class="hint">Tip: search like <b>site:tiktok.com @handle</b> or <b>site:instagram.com \"creator name\"</b>.</div>
-      <div id="cse-results" style="margin-top:10px"></div>
-      <script>
-        window.__gcse = { parsetags: 'explicit', callback: function(){
-          try{
-            google.search.cse.element.render({ gname:'box', div:'cse-searchbox', tag:'searchbox-only' });
-            google.search.cse.element.render({ gname:'results', div:'cse-results', tag:'searchresults-only', attributes:{ enableOrderBy:true, linkTarget:'_blank' }});
-          }catch(e){ console.error('CSE render error', e); }
-        }};
-      </script>
+      <div class="gcse-search"></div>
+      <p><small>Tip: search like <b>site:tiktok.com @handle</b> or <b>site:instagram.com "creator name"</b>.</small></p>
     </section>
 
-    <!-- RIGHT: Analytics -->
-    <section class="panel pad" aria-label="Analytics">
+    <!-- If you only want search results, use this line instead of the combined search box -->
+    <!-- <div class="gcse-searchresults-only"></div> -->
+
+    <!-- Analytics panel placeholder (connects to backend if deployed) -->
+    <section class="panel">
       <h2>Analytics</h2>
-      <div class="row" style="margin-bottom:10px">
-        <div>
-          <label for="platform">Platform</label>
-          <select id="platform">
-            <option value="instagram">Instagram</option>
-            <option value="tiktok">TikTok</option>
-          </select>
-        </div>
-        <div>
-          <label for="profile">Profile URL / handle</label>
-          <input id="profile" placeholder="e.g. https://www.instagram.com/creator/ or @creator" />
-        </div>
-      </div>
-      <div class="row" style="margin-bottom:10px">
-        <div>
-          <label for="window">Data window</label>
-          <select id="window">
-            <option value="14">Last 14 posts</option>
-            <option value="30">Last 30 posts</option>
-          </select>
-        </div>
-        <div>
-          <label for="usPercent">US Audience % (manual if public mode)</label>
-          <input id="usPercent" type="number" min="0" max="100" step="0.1" placeholder="Paste % if you have it" />
-        </div>
-      </div>
-      <div class="row" style="margin-bottom:10px">
-        <div>
-          <label for="mode">Mode</label>
-          <select id="mode">
-            <option value="public">Public (no login)</option>
-            <option value="verified">Verified (owner connected)</option>
-          </select>
-        </div>
-        <div>
-          <button id="analyze">Analyze</button>
-        </div>
-      </div>
+      <label for="platform">Platform</label>
+      <select id="platform">
+        <option value="instagram">Instagram</option>
+        <option value="tiktok">TikTok</option>
+      </select>
 
-      <div class="grid" style="margin:12px 0">
-        <div class="panel pad">
-          <p class="k">Median Views (window)</p>
-          <p class="v" id="medianViews">—</p>
-          <p class="tiny" id="medianExplain"></p>
-        </div>
-        <div class="panel pad">
-          <p class="k">Average Engagement Rate</p>
-          <p class="v" id="avgEr">—</p>
-          <p class="tiny" id="erExplain">Formula varies by platform/mode.</p>
-        </div>
-        <div class="panel pad">
-          <p class="k">US Audience %</p>
-          <p class="v" id="usOut">—</p>
-          <p class="tiny">Manual in Public mode; auto in Verified where available.</p>
-        </div>
-      </div>
+      <label for="profile">Profile URL / Handle</label>
+      <input id="profile" placeholder="e.g. https://www.instagram.com/creator/ or @creator" />
 
-      <div id="alert"></div>
+      <label for="window">Data window</label>
+      <select id="window">
+        <option value="14">Last 14 posts</option>
+        <option value="30">Last 30 posts</option>
+      </select>
 
-      <div class="list">
-        <table>
-          <thead>
-            <tr>
-              <th>Published</th>
-              <th>Post</th>
-              <th class="right">Views</th>
-              <th class="right">Likes</th>
-              <th class="right">Comments</th>
-              <th class="right">Shares</th>
-              <th class="right">ER</th>
-            </tr>
-          </thead>
-          <tbody id="tbody"></tbody>
-        </table>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <div><button id="exportCsv" disabled>Export CSV</button></div>
-        <div><button id="requestAccess">Request Access from Creator</button></div>
-      </div>
+      <label for="usPercent">US Audience % (manual if public mode)</label>
+      <input id="usPercent" type="number" min="0" max="100" step="0.1" placeholder="Paste % if you have it" />
 
-      <p class="hint" style="margin-top:8px">Public mode uses only numbers visible without login; some posts may hide like/view counts. Verified mode requires creator authorization and fetches true analytics via official APIs.</p>
+      <label for="mode">Mode</label>
+      <select id="mode">
+        <option value="public">Public (no login)</option>
+        <option value="verified">Verified (owner connected)</option>
+      </select>
+
+      <button id="analyze">Analyze</button>
+      <button id="exportCsv" disabled>Export CSV</button>
+      <button id="requestAccess">Request Access from Creator</button>
+
+      <h3>Results</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Published</th>
+            <th>Post</th>
+            <th class="right">Views</th>
+            <th class="right">Likes</th>
+            <th class="right">Comments</th>
+            <th class="right">Shares</th>
+            <th class="right">ER</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
     </section>
   </main>
-
-  <script>
-    const els = {
-      platform: document.getElementById('platform'),
-      profile: document.getElementById('profile'),
-      windowSel: document.getElementById('window'),
-      mode: document.getElementById('mode'),
-      usPercent: document.getElementById('usPercent'),
-      analyze: document.getElementById('analyze'),
-      exportCsv: document.getElementById('exportCsv'),
-      requestAccess: document.getElementById('requestAccess'),
-      medianViews: document.getElementById('medianViews'),
-      medianExplain: document.getElementById('medianExplain'),
-      avgEr: document.getElementById('avgEr'),
-      erExplain: document.getElementById('erExplain'),
-      usOut: document.getElementById('usOut'),
-      alert: document.getElementById('alert'),
-      tbody: document.getElementById('tbody'),
-    };
-
-    const fmt = new Intl.NumberFormat();
-    const pct = new Intl.NumberFormat(undefined,{style:'percent', minimumFractionDigits:2, maximumFractionDigits:2});
-
-    function setAlert(msg){ els.alert.innerHTML = msg ? `<div class="error">${msg}</div>` : ''; }
-    function calcMedian(nums){ const a = nums.filter(x=>typeof x==='number'&&!isNaN(x)).sort((x,y)=>x-y); if(!a.length) return 0; const m=Math.floor(a.length/2); return a.length%2?a[m]:(a[m-1]+a[m])/2; }
-
-    function toCsv(rows){
-      const esc=v=>{ if(v==null) return ''; v=String(v); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; };
-      return rows.map(r=>r.map(esc).join(',')).join('\n');
-    }
-
-    function buildAccessEmail(){
-      const platform = els.platform.value;
-      return `Hey there — could you connect your ${platform} so we can pull verified analytics (audience country %, post views, likes, comments, shares) into our Creator Finder? It’s read-only and you can revoke any time. If you’re open to it, reply here and we’ll send a secure link.\n\nThanks!`;
-    }
-
-    els.requestAccess.addEventListener('click', ()=>{
-      const msg = buildAccessEmail();
-      navigator.clipboard.writeText(msg).then(()=>{
-        alert('Access request text copied to clipboard. Paste into DM/email.');
-      });
-    });
-
-    els.usPercent.addEventListener('input', ()=>{
-      els.usOut.textContent = els.usPercent.value ? `${Number(els.usPercent.value).toFixed(1)}%` : '—';
-    });
-
-    els.analyze.addEventListener('click', async ()=>{
-      setAlert('');
-      els.exportCsv.disabled = true;
-      els.tbody.innerHTML = '';
-      els.medianViews.textContent = '—';
-      els.avgEr.textContent = '—';
-      els.usOut.textContent = els.usPercent.value ? `${Number(els.usPercent.value).toFixed(1)}%` : '—';
-
-      const platform = els.platform.value;
-      const profile = els.profile.value.trim();
-      const n = parseInt(els.windowSel.value,10);
-      const mode = els.mode.value; // public | verified
-      if(!profile){ setAlert('Enter a profile URL or @handle.'); return; }
-
-      // IMPORTANT: If your backend is on a different domain, replace "/api" with your full backend origin
-      const endpoint = `/api/${mode}/${platform}`;
-      try{
-        const res = await fetch(endpoint, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ profile, window:n, usPercent: Number(els.usPercent.value)||null }) });
-        if(!res.ok){ const t = await res.text(); throw new Error(t || res.statusText); }
-        const data = await res.json();
-
-        const rows = data.posts || [];
-        const viewVals = rows.map(r=>r.views).filter(v=>typeof v==='number' && !isNaN(v));
-        const erVals = rows.map(r=>r.er).filter(v=>typeof v==='number' && !isNaN(v));
-
-        els.medianViews.textContent = viewVals.length ? fmt.format(calcMedian(viewVals)) : '—';
-        els.medianExplain.textContent = `${viewVals.length} of ${n} posts had public views.`;
-        els.avgEr.textContent = erVals.length ? pct.format(erVals.reduce((a,b)=>a+b,0)/erVals.length) : '—';
-        els.erExplain.textContent = data.erFormula || '—';
-
-        const frag = document.createDocumentFragment();
-        for(const r of rows){
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${r.published||''}</td>
-            <td><a href="${r.url}" target="_blank" rel="noopener">${r.title||r.id||'Post'}</a></td>
-            <td class="right">${r.views!=null?fmt.format(r.views):''}</td>
-            <td class="right">${r.likes!=null?fmt.format(r.likes):''}</td>
-            <td class="right">${r.comments!=null?fmt.format(r.comments):''}</td>
-            <td class="right">${r.shares!=null?fmt.format(r.shares):''}</td>
-            <td class="right">${r.er!=null?pct.format(r.er):'—'}</td>`;
-          frag.appendChild(tr);
-        }
-        document.getElementById('tbody').appendChild(frag);
-
-        // CSV export
-        els.exportCsv.disabled = rows.length===0;
-        els.exportCsv.onclick = ()=>{
-          const header = ['published','title','url','views','likes','comments','shares','er'];
-          const csv = toCsv([header, ...rows.map(r=>[r.published,r.title||r.id,r.url,r.views,r.likes,r.comments,r.shares,r.er])]);
-          const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-          const link = document.createElement('a');
-          link.href = URL.createObjectURL(blob);
-          link.download = `${platform}_${mode}_metrics_${(profile||'profile').replace(/[^a-z0-9]+/gi,'_')}_${n}.csv`;
-          document.body.appendChild(link); link.click(); document.body.removeChild(link);
-        };
-
-      }catch(err){
-        console.error(err);
-        setAlert('Error: ' + (err.message||String(err)));
-      }
-    });
-  </script>
 </body>
 </html>
+
+
 
 
