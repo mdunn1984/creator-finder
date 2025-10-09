@@ -1,277 +1,509 @@
+# Creator Finder — Search + Public/Verified Analytics (TikTok & Instagram)
+
+This bundle gives you:
+
+* **Left:** Creator search (Google CSE) to find specific creators fast.
+* **Right:** Analytics drawer with **Public Mode** (estimates from public signals + manual US%) and **Verified Mode** (true metrics when a creator connects IG/TikTok).
+* **Exports:** CSV of the last **14** or **30** posts with ER + summary cards (Median Views, Avg ER, US%).
+
+> **Heads‑up:** Instagram/TikTok do **not** expose US audience % or full analytics publicly for third‑party accounts. Public Mode can only use numbers that are visible without logging in (often incomplete). Verified Mode requires OAuth (IG Graph API, TikTok for Developers/Business). The backend below includes stubs to plug in those official APIs.
+
+---
+
+## 1) Frontend — `index.html` (deploy to GitHub Pages)
+
+Paste this as your site’s `index.html`.
+
+```html
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Creator Finder – Search URL Builder</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Creator Finder — Search + Analytics</title>
   <style>
-    :root { --fg: #0b0b0f; --sub:#5b5b66; --bg:#fafafa; --card:#ffffff; --bd:#e6e6ee; --mut:#f4f4f8; }
-    * { box-sizing: border-box; }
-    body { margin: 0; font: 15px/1.35 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color:var(--fg); background:var(--bg); }
-    header { padding: 24px; border-bottom: 1px solid var(--bd); background: var(--card); position: sticky; top: 0; z-index: 9; }
-    h1 { margin: 0 0 6px; font-size: 20px; }
-    p.sub { margin: 0; color: var(--sub); }
-    main { max-width: 1100px; margin: 24px auto; padding: 0 16px 40px; }
-    .grid { display: grid; gap: 14px; grid-template-columns: 1fr; }
-    @media(min-width: 880px){ .grid{ grid-template-columns: 2fr 1fr; } }
-    .card { background: var(--card); border: 1px solid var(--bd); border-radius: 12px; padding: 16px; }
-    .row { display: grid; gap: 10px; grid-template-columns: 1fr; margin-bottom: 12px; }
-    @media(min-width:700px){ .row.two{ grid-template-columns: 1fr 1fr; } .row.three{ grid-template-columns: 1fr 1fr 1fr; } }
-    label { font-weight: 600; display: block; margin-bottom: 6px; }
-    input[type=text], select, textarea {
-      width: 100%; border:1px solid var(--bd); border-radius:10px; padding:10px 12px; background:#fff; outline:none;
-    }
-    textarea { min-height: 70px; resize: vertical; }
-    .chips { display:flex; flex-wrap:wrap; gap:8px; }
-    .chip { background: var(--mut); border:1px solid var(--bd); border-radius:999px; padding:8px 10px; display:inline-flex; align-items:center; gap:8px; }
-    .chip input { margin:0; }
-    .btn { display:inline-block; padding:10px 14px; border-radius:10px; border:1px solid var(--bd); background:#111; color:#fff; cursor:pointer; text-decoration:none; font-weight:600; }
-    .btn.secondary { background:#fff; color:#111; }
-    .links a { display:block; padding:10px 12px; border:1px solid var(--bd); border-radius:10px; text-decoration:none; color:#111; background:#fff; }
-    .links a + a { margin-top:8px; }
-    small.hint { color: var(--sub); display:block; margin-top:4px; }
-    .inline { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    :root{--bg:#0b1220;--ink:#0f172a;--mut:#64748b;--card:#ffffff;--accent:#2563eb}
+    *{box-sizing:border-box}
+    body{margin:0;background:#f6f8fb;color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+    header{position:sticky;top:0;z-index:10;background:var(--bg);color:#fff;padding:14px 18px;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+    header h1{margin:0;font-size:18px}
+    main{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;max-width:1200px;margin:20px auto;padding:0 16px}
+    @media(max-width:960px){main{grid-template-columns:1fr}}
+    .panel{background:var(--card);border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 6px 24px rgba(2,6,23,.06)}
+    .pad{padding:16px}
+    h2{margin:0 0 10px;font-size:16px}
+    label{font-weight:600;font-size:13px;color:#0f172a}
+    input,select,button{width:100%;padding:10px 12px;border-radius:12px;border:1px solid #e5e7eb;background:#fff}
+    input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+    button{background:var(--accent);border:0;color:#fff;font-weight:700;cursor:pointer}
+    button:disabled{background:#94a3b8;cursor:not-allowed}
+    .row{display:grid;gap:10px}
+    @media(min-width:800px){.row{grid-template-columns:1fr 1fr}}
+    .k{font-size:12px;color:var(--mut);margin:0}
+    .v{font-size:26px;font-weight:800;margin:2px 0 0}
+    .tiny{font-size:12px;color:var(--mut)}
+    .grid{display:grid;gap:12px;grid-template-columns:repeat(3,minmax(0,1fr))}
+    .list{border:1px solid #e5e7eb;border-radius:14px;overflow:hidden}
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    th,td{padding:10px 12px;border-bottom:1px solid #eef2f7;text-align:left}
+    th{background:#f8fafc;font-weight:700}
+    .right{text-align:right}
+    .error{background:#fee2e2;color:#7f1d1d;border:1px solid #fecaca;padding:10px 12px;border-radius:12px;margin-top:10px}
+    .mut{color:#64748b}
+    .hint{font-size:12px;color:#64748b;margin-top:6px}
+    .badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:700}
   </style>
+  
+  <!-- Google CSE (replace cx below) -->
+  <script async src="https://cse.google.com/cse.js?cx=REPLACE_WITH_YOUR_CSE_ID"></script>
 </head>
 <body>
-  <header>
-    <h1>Creator Finder – Search URL Builder</h1>
-    <p class="sub">Generate smart Google/Bing/TikTok/YouTube searches for creators by niche, location, and signals (email, “business inquiries”, etc.).</p>
-  </header>
-
+  <header><h1>Creator Finder — Search + Analytics</h1></header>
+  
   <main>
-    <div class="grid">
-      <!-- FORM -->
-      <section class="card">
-        <h2 style="margin-top:0">Criteria</h2>
-
-        <div class="row">
-          <div>
-            <label for="keywords">Niche / Keywords</label>
-            <input id="keywords" type="text" placeholder='e.g., "chef", "mom life", "home workouts", "mens fashion"' />
-            <small class="hint">Use commas to separate ideas. We’ll OR-group them automatically.</small>
-          </div>
+    <!-- LEFT: Search -->
+    <section class="panel pad" aria-label="Creator Search">
+      <h2>Find Creators</h2>
+      <div id="cse-searchbox"></div>
+      <div class="hint">Tip: search like <b>site:tiktok.com @handle</b> or <b>site:instagram.com "creator name"</b>.</div>
+      <div id="cse-results" style="margin-top:10px"></div>
+      <script>
+        window.__gcse = { parsetags: 'explicit', callback: function(){
+          try{
+            google.search.cse.element.render({ gname:'box', div:'cse-searchbox', tag:'searchbox-only' });
+            google.search.cse.element.render({ gname:'results', div:'cse-results', tag:'searchresults-only', attributes:{ enableOrderBy:true, linkTarget:'_blank' }});
+          }catch(e){ console.error('CSE render error', e); }
+        }};
+      </script>
+    </section>
+    
+    <!-- RIGHT: Analytics -->
+    <section class="panel pad" aria-label="Analytics">
+      <h2>Analytics</h2>
+      <div class="row" style="margin-bottom:10px">
+        <div>
+          <label for="platform">Platform</label>
+          <select id="platform">
+            <option value="instagram">Instagram</option>
+            <option value="tiktok">TikTok</option>
+          </select>
         </div>
-
-        <div class="row two">
-          <div>
-            <label for="location">Location (optional)</label>
-            <input id="location" type="text" placeholder='e.g., "New Jersey", "Los Angeles", "UK"' />
-          </div>
-          <div>
-            <label for="language">Language (optional)</label>
-            <input id="language" type="text" placeholder='e.g., "English", "Spanish"' />
-          </div>
+        <div>
+          <label for="profile">Profile URL / handle</label>
+          <input id="profile" placeholder="e.g. https://www.instagram.com/creator/ or @creator" />
         </div>
-
-        <div class="row two">
-          <div>
-            <label for="signals">Contactability Signals</label>
-            <div class="chips">
-              <label class="chip"><input type="checkbox" class="sig" value='"email"' checked> email</label>
-              <label class="chip"><input type="checkbox" class="sig" value='"business inquiries"' checked> business inquiries</label>
-              <label class="chip"><input type="checkbox" class="sig" value='"management"' > management</label>
-              <label class="chip"><input type="checkbox" class="sig" value='"partnerships"'> partnerships</label>
-              <label class="chip"><input type="checkbox" class="sig" value='"collab" OR "collaboration"'> collaboration</label>
-            </div>
-            <small class="hint">These are added as quoted phrases to bias toward profiles with contact info.</small>
-          </div>
-          <div>
-            <label for="freshness">Recency</label>
-            <select id="freshness">
-              <option value="">Any time</option>
-              <option value="qdr:w">Past week</option>
-              <option value="qdr:m">Past month</option>
-              <option value="qdr:y">Past year</option>
-            </select>
-            <small class="hint">Applies to Google searches via the <code>tbs</code> parameter.</small>
-          </div>
+      </div>
+      <div class="row" style="margin-bottom:10px">
+        <div>
+          <label for="window">Data window</label>
+          <select id="window">
+            <option value="14">Last 14 posts</option>
+            <option value="30">Last 30 posts</option>
+          </select>
         </div>
-
-        <div class="row two">
-          <div>
-            <label>Platforms to Search</label>
-            <div class="chips">
-              <label class="chip"><input type="checkbox" class="pf" value="instagram.com" checked> Instagram</label>
-              <label class="chip"><input type="checkbox" class="pf" value="tiktok.com" checked> TikTok</label>
-              <label class="chip"><input type="checkbox" class="pf" value="youtube.com" checked> YouTube</label>
-              <label class="chip"><input type="checkbox" class="pf" value="twitch.tv"> Twitch</label>
-              <label class="chip"><input type="checkbox" class="pf" value="x.com"> X (Twitter)</label>
-            </div>
-          </div>
-          <div>
-            <label for="extras">Extra Terms (optional)</label>
-            <input id="extras" type="text" placeholder='e.g., "UGC", "brand ambassa­dor", "recipe", "tutorial"' />
-          </div>
+        <div>
+          <label for="usPercent">US Audience % (manual if public mode)</label>
+          <input id="usPercent" type="number" min="0" max="100" step="0.1" placeholder="Paste % if you have it" />
         </div>
-
-        <div class="row two">
-          <div>
-            <label for="minFollowers">Min Followers (soft filter)</label>
-            <input id="minFollowers" type="text" placeholder="e.g., 10000 or 50k or 1m" />
-            <small class="hint">Search can’t enforce counts, but we’ll add helpful tokens like “k followers”, “m followers”.</small>
-          </div>
-          <div>
-            <label for="engagement">Engagement Words (optional)</label>
-            <input id="engagement" type="text" placeholder='e.g., "engagement rate", "avg likes", "views"' />
-          </div>
+      </div>
+      <div class="row" style="margin-bottom:10px">
+        <div>
+          <label for="mode">Mode</label>
+          <select id="mode">
+            <option value="public">Public (no login)</option>
+            <option value="verified">Verified (owner connected)</option>
+          </select>
         </div>
-
-        <div class="row">
-          <div class="inline">
-            <button id="build" class="btn">Build Search Links</button>
-            <button id="reset" class="btn secondary">Reset</button>
-          </div>
+        <div>
+          <button id="analyze">Analyze</button>
         </div>
-      </section>
+      </div>
 
-      <!-- LINKS -->
-      <aside class="card">
-        <h2 style="margin-top:0">Search Links</h2>
-        <div id="links" class="links">
-          <p style="color:#666">Fill the form and click <b>Build Search Links</b> — your links will appear here.</p>
+      <div class="grid" style="margin:12px 0">
+        <div class="panel pad">
+          <p class="k">Median Views (window)</p>
+          <p class="v" id="medianViews">—</p>
+          <p class="tiny" id="medianExplain"></p>
         </div>
-        <small class="hint">Tip: open links in new tabs and compare results. Use the General Web search to find press/features/Linktrees with contact info.</small>
-      </aside>
-    </div>
+        <div class="panel pad">
+          <p class="k">Average Engagement Rate</p>
+          <p class="v" id="avgEr">—</p>
+          <p class="tiny" id="erExplain">Formula varies by platform/mode.</p>
+        </div>
+        <div class="panel pad">
+          <p class="k">US Audience %</p>
+          <p class="v" id="usOut">—</p>
+          <p class="tiny">Manual in Public mode; auto in Verified where available.</p>
+        </div>
+      </div>
+
+      <div id="alert"></div>
+
+      <div class="list">
+        <table>
+          <thead>
+            <tr>
+              <th>Published</th>
+              <th>Post</th>
+              <th class="right">Views</th>
+              <th class="right">Likes</th>
+              <th class="right">Comments</th>
+              <th class="right">Shares</th>
+              <th class="right">ER</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <div><button id="exportCsv" disabled>Export CSV</button></div>
+        <div><button id="requestAccess">Request Access from Creator</button></div>
+      </div>
+
+      <p class="hint" style="margin-top:8px">Public mode uses only numbers visible without login; some posts may hide like/view counts. Verified mode requires creator authorization and fetches true analytics via official APIs.</p>
+    </section>
   </main>
 
   <script>
-    const el = (id) => document.getElementById(id);
-    const esc = (s) => encodeURIComponent(s.trim());
+    const els = {
+      platform: document.getElementById('platform'),
+      profile: document.getElementById('profile'),
+      windowSel: document.getElementById('window'),
+      mode: document.getElementById('mode'),
+      usPercent: document.getElementById('usPercent'),
+      analyze: document.getElementById('analyze'),
+      exportCsv: document.getElementById('exportCsv'),
+      requestAccess: document.getElementById('requestAccess'),
+      medianViews: document.getElementById('medianViews'),
+      medianExplain: document.getElementById('medianExplain'),
+      avgEr: document.getElementById('avgEr'),
+      erExplain: document.getElementById('erExplain'),
+      usOut: document.getElementById('usOut'),
+      alert: document.getElementById('alert'),
+      tbody: document.getElementById('tbody'),
+    };
 
-    function tokenize(listStr, wrapQuotes=false){
-      const arr = (listStr||"").split(",").map(s=>s.trim()).filter(Boolean);
-      if(!arr.length) return "";
-      if(wrapQuotes){ return "(" + arr.map(v => `"${v}"`).join(" OR ") + ")"; }
-      return "(" + arr.map(v => v.includes(" ") ? `"${v}"` : v).join(" OR ") + ")";
+    const fmt = new Intl.NumberFormat();
+    const pct = new Intl.NumberFormat(undefined,{style:'percent', minimumFractionDigits:2, maximumFractionDigits:2});
+
+    function setAlert(msg){ els.alert.innerHTML = msg ? `<div class="error">${msg}</div>` : ''; }
+    function calcMedian(nums){ const a = nums.filter(x=>typeof x==='number'&&!isNaN(x)).sort((x,y)=>x-y); if(!a.length) return 0; const m=Math.floor(a.length/2); return a.length%2?a[m]:(a[m-1]+a[m])/2; }
+
+    function toCsv(rows){
+      const esc=v=>{ if(v==null) return ''; v=String(v); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; };
+      return rows.map(r=>r.map(esc).join(',')).join('\n');
     }
 
-    function followersTokens(min){
-      if(!min) return "";
-      let s = String(min).toLowerCase().trim();
-      // Normalize common shorthands
-      s = s.replace(/[, ]/g,"");
-      const hasK = s.endsWith("k");
-      const hasM = s.endsWith("m");
-      let num = parseFloat(s);
-      if(isNaN(num)) return '("k followers" OR "m followers" OR followers)';
-      if(hasK) num = Math.round(num); // 10k, 25k
-      if(hasM) num = num * 1000; // 1m -> 1000k
-      // Build soft tokens
-      const buckets = [];
-      if(num >= 1000) buckets.push('"k followers"');
-      if(num >= 1000000) buckets.push('"m followers"');
-      buckets.push("followers"); // always include generic
-      return "(" + Array.from(new Set(buckets)).join(" OR ") + ")";
+    function buildAccessEmail(){
+      const platform = els.platform.value;
+      return `Hey there — could you connect your ${platform} so we can pull verified analytics (audience country %, post views, likes, comments, shares) into our Creator Finder? It’s read-only and you can revoke any time. If you’re open to it, reply here and we’ll send a secure link.\n\nThanks!`;
     }
 
-    function buildGoogleQuery(opts){
-      const {keywords, location, language, signals, extras, followers, engagement, platforms} = opts;
-
-      const k = tokenize(keywords,true);
-      const loc = location ? `("${location}")` : "";
-      const lang = language ? `("${language}")` : "";
-      const sig = signals.length ? "(" + signals.join(" OR ") + ")" : "";
-      const ex = tokenize(extras,true);
-      const foll = followersTokens(followers);
-      const eng = tokenize(engagement,true);
-
-      const terms = [k, loc, lang, sig, ex, foll, eng].filter(Boolean).join(" ");
-      const site = platforms.length ? "(" + platforms.map(p => `site:${p}`).join(" OR ") + ")" : "";
-
-      // Avoid login walls / noise for some platforms
-      const minus = [
-        "-inurl:/login", "-inurl:/accounts", "-inurl:/signup",
-        "-intitle:login", "-intitle:sign", "-site:help.instagram.com"
-      ].join(" ");
-
-      return [site, terms, minus].filter(Boolean).join(" ");
-    }
-
-    function googleURL(q, freshness){
-      const base = "https://www.google.com/search?q=" + esc(q);
-      return freshness ? `${base}&tbs=${freshness}` : base;
-    }
-
-    function bingURL(q){
-      return "https://www.bing.com/search?q=" + esc(q);
-    }
-
-    function ytURL(keywords, extras, freshness){
-      const q = [keywords, extras].filter(Boolean).join(", ");
-      // sp=CAI%253D (Upload date) is complex; simplest is general query
-      const url = "https://www.youtube.com/results?search_query=" + esc(q);
-      return url + (freshness ? "" : "");
-    }
-
-    function tiktokURL(keywords, location){
-      const q = [keywords, location].filter(Boolean).join(", ");
-      return "https://www.tiktok.com/search?q=" + esc(q);
-    }
-
-    function makeLink(href, label){
-      const a = document.createElement("a");
-      a.href = href; a.target = "_blank"; a.rel = "noopener"; a.textContent = label;
-      return a;
-    }
-
-    function build(){
-      const keywords = el("keywords").value;
-      const location = el("location").value;
-      const language = el("language").value;
-      const freshness = el("freshness").value;
-      const extras = el("extras").value;
-      const minFollowers = el("minFollowers").value;
-      const engagement = el("engagement").value;
-
-      const signals = Array.from(document.querySelectorAll(".sig:checked")).map(i => i.value);
-      const platforms = Array.from(document.querySelectorAll(".pf:checked")).map(i => i.value);
-
-      const q = buildGoogleQuery({
-        keywords, location, language,
-        signals, extras, followers: minFollowers, engagement, platforms
+    els.requestAccess.addEventListener('click', ()=>{
+      const msg = buildAccessEmail();
+      navigator.clipboard.writeText(msg).then(()=>{
+        alert('Access request text copied to clipboard. Paste into DM/email.');
       });
+    });
 
-      const links = el("links");
-      links.innerHTML = "";
+    els.usPercent.addEventListener('input', ()=>{
+      els.usOut.textContent = els.usPercent.value ? `${Number(els.usPercent.value).toFixed(1)}%` : '—';
+    });
 
-      // General Google & Bing
-      links.appendChild(makeLink(googleURL(q, freshness), "Google – General (multi-platform)"));
-      links.appendChild(makeLink(bingURL(q), "Bing – General (backup engine)"));
+    els.analyze.addEventListener('click', async ()=>{
+      setAlert('');
+      els.exportCsv.disabled = true;
+      els.tbody.innerHTML = '';
+      els.medianViews.textContent = '—';
+      els.avgEr.textContent = '—';
+      els.usOut.textContent = els.usPercent.value ? `${Number(els.usPercent.value).toFixed(1)}%` : '—';
 
-      // Platform-specific Google searches (site filters split out)
-      const perPlatform = (domain) => {
-        const pq = q.replace(/\(site:[^)]+\)/, `site:${domain}`); // narrow to one site
-        links.appendChild(makeLink(googleURL(pq, freshness), `Google – ${domain}`));
-      };
-      Array.from(document.querySelectorAll(".pf:checked")).forEach(i => perPlatform(i.value));
+      const platform = els.platform.value;
+      const profile = els.profile.value.trim();
+      const n = parseInt(els.windowSel.value,10);
+      const mode = els.mode.value; // public | verified
+      if(!profile){ setAlert('Enter a profile URL or @handle.'); return; }
 
-      // Native platform searches (where useful)
-      links.appendChild(makeLink(ytURL(keywords, extras, freshness), "YouTube – native search"));
-      links.appendChild(makeLink(tiktokURL(keywords, location), "TikTok – native search"));
+      const endpoint = `/api/${mode}/${platform}`;
+      try{
+        const res = await fetch(endpoint, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ profile, window:n, usPercent: Number(els.usPercent.value)||null }) });
+        if(!res.ok){ const t = await res.text(); throw new Error(t || res.statusText); }
+        const data = await res.json();
 
-      // Bonus “contact first” query
-      const contactFirst = q + ' ("email me" OR "email us" OR "for business" OR "mgmt" OR "press")';
-      links.appendChild(makeLink(googleURL(contactFirst, freshness), "Google – Biased to contactable profiles"));
-    }
+        const rows = data.posts || [];
+        const viewVals = rows.map(r=>r.views).filter(v=>typeof v==='number' && !isNaN(v));
+        const erVals = rows.map(r=>r.er).filter(v=>typeof v==='number' && !isNaN(v));
 
-    document.getElementById("build").addEventListener("click", (e)=>{ e.preventDefault(); build(); });
-    document.getElementById("reset").addEventListener("click", (e)=>{
-      e.preventDefault();
-      document.querySelector("form")?.reset();
-      // crude reset:
-      el("keywords").value = "";
-      el("location").value = "";
-      el("language").value = "";
-      el("extras").value = "";
-      el("minFollowers").value = "";
-      el("engagement").value = "";
-      document.querySelectorAll(".sig").forEach(i=> i.checked = (i.value === '"email"' || i.value === '"business inquiries"'));
-      document.querySelectorAll(".pf").forEach(i=> i.checked = (["instagram.com","tiktok.com","youtube.com"].includes(i.value)));
-      el("freshness").value = "";
-      el("links").innerHTML = '<p style="color:#666">Cleared. Enter criteria and click <b>Build Search Links</b>.</p>';
+        els.medianViews.textContent = viewVals.length ? fmt.format(calcMedian(viewVals)) : '—';
+        els.medianExplain.textContent = `${viewVals.length} of ${n} posts had public views.`;
+        els.avgEr.textContent = erVals.length ? pct.format(erVals.reduce((a,b)=>a+b,0)/erVals.length) : '—';
+        els.erExplain.textContent = data.erFormula || '—';
+
+        const frag = document.createDocumentFragment();
+        for(const r of rows){
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${r.published||''}</td>
+            <td><a href="${r.url}" target="_blank" rel="noopener">${r.title||r.id||'Post'}</a></td>
+            <td class="right">${r.views!=null?fmt.format(r.views):''}</td>
+            <td class="right">${r.likes!=null?fmt.format(r.likes):''}</td>
+            <td class="right">${r.comments!=null?fmt.format(r.comments):''}</td>
+            <td class="right">${r.shares!=null?fmt.format(r.shares):''}</td>
+            <td class="right">${r.er!=null?pct.format(r.er):'—'}</td>`;
+          frag.appendChild(tr);
+        }
+        document.getElementById('tbody').appendChild(frag);
+
+        // CSV export
+        els.exportCsv.disabled = rows.length===0;
+        els.exportCsv.onclick = ()=>{
+          const header = ['published','title','url','views','likes','comments','shares','er'];
+          const csv = toCsv([header, ...rows.map(r=>[r.published,r.title||r.id,r.url,r.views,r.likes,r.comments,r.shares,r.er])]);
+          const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = `${platform}_${mode}_metrics_${(profile||'profile').replace(/[^a-z0-9]+/gi,'_')}_${n}.csv`;
+          document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        };
+
+      }catch(err){
+        console.error(err);
+        setAlert('Error: ' + (err.message||String(err)));
+      }
     });
   </script>
 </body>
 </html>
+```
+
+**Replace** `REPLACE_WITH_YOUR_CSE_ID` with your Google CSE ID.
+
+---
+
+## 2) Backend — Node/Express starter (deploy to Vercel/Render/Netlify Functions)
+
+Create a folder for the backend and add these files:
+
+### `package.json`
+
+```json
+{
+  "name": "creator-finder-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "NODE_OPTIONS=--watch node server.js"
+  },
+  "dependencies": {
+    "cross-fetch": "^4.0.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}
+```
+
+### `server.js`
+
+```js
+import express from 'express';
+import fetch from 'cross-fetch';
+import dotenv from 'dotenv';
+import { publicInstagram, publicTikTok } from './src/public-adapters.js';
+import { verifiedInstagram } from './src/verified-instagram.js';
+import { verifiedTikTok } from './src/verified-tiktok.js';
+
+dotenv.config();
+
+const app = express();
+app.use(express.json({ limit: '1mb' }));
+
+// Health
+app.get('/api/health', (_,res)=>res.json({ ok:true }));
+
+// Public mode (no login) — returns what’s visible without auth
+app.post('/api/public/instagram', async (req,res)=>{
+  try{
+    const { profile, window=14 } = req.body||{};
+    const data = await publicInstagram({ profile, window });
+    res.json({ platform:'instagram', mode:'public', erFormula:'(likes + comments) / views (when visible)', ...data });
+  }catch(e){ res.status(501).send(e.message||'Public Instagram adapter not implemented'); }
+});
+
+app.post('/api/public/tiktok', async (req,res)=>{
+  try{
+    const { profile, window=14 } = req.body||{};
+    const data = await publicTikTok({ profile, window });
+    res.json({ platform:'tiktok', mode:'public', erFormula:'(likes + comments + shares) / views (when visible)', ...data });
+  }catch(e){ res.status(501).send(e.message||'Public TikTok adapter not implemented'); }
+});
+
+// Verified mode (creator connects)
+app.post('/api/verified/instagram', async (req,res)=>{
+  try{
+    const { igUserId, accessToken, window=14 } = req.body||{};
+    const data = await verifiedInstagram({ igUserId, accessToken, window });
+    res.json({ platform:'instagram', mode:'verified', erFormula:'(likes + comments) / video_views (IG insights)', ...data });
+  }catch(e){ res.status(400).send(e.message||'Instagram verified error'); }
+});
+
+app.post('/api/verified/tiktok', async (req,res)=>{
+  try{
+    const { accessToken, advertiserId, businessAccountId, window=14 } = req.body||{};
+    const data = await verifiedTikTok({ accessToken, advertiserId, businessAccountId, window });
+    res.json({ platform:'tiktok', mode:'verified', erFormula:'(likes + comments + shares) / views (TikTok analytics)', ...data });
+  }catch(e){ res.status(400).send(e.message||'TikTok verified error'); }
+});
+
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, ()=> console.log(`Creator Finder backend on http://localhost:${PORT}`));
+```
+
+### `src/public-adapters.js`
+
+```js
+// Public collectors SHOULD use a compliant approach (e.g., your own Puppeteer/Playwright on your server
+// honoring robots/terms, or a data provider). Most platforms block raw scraping and/or require consent.
+// For now, these return 501 Not Implemented with guidance.
+
+export async function publicInstagram({ profile, window }){
+  throw new Error('Public Instagram collection requires a compliant data source (e.g., IG oEmbed is insufficient for views). Use Verified mode or integrate a provider.');
+}
+
+export async function publicTikTok({ profile, window }){
+  throw new Error('Public TikTok collection requires a compliant data source or the official API for connected accounts. Use Verified mode or integrate a provider.');
+}
+```
+
+### `src/verified-instagram.js`
+
+```js
+// Minimal IG Graph API flow for connected Business/Creator accounts.
+// You’ll supply igUserId + accessToken obtained via OAuth (outside scope here).
+// Docs: https://developers.facebook.com/docs/instagram-api/
+
+import fetch from 'cross-fetch';
+
+export async function verifiedInstagram({ igUserId, accessToken, window=14 }){
+  if(!igUserId || !accessToken) throw new Error('Missing igUserId or accessToken');
+
+  // 1) Audience country (lifetime)
+  const aud = await igGet(`/v19.0/${igUserId}/insights?metric=audience_country&period=lifetime`, accessToken);
+  const countries = (aud.data?.[0]?.values?.[0]?.value) || {};
+  const total = Object.values(countries).reduce((a,b)=>a+Number(b||0),0);
+  const us = Number(countries.US||0);
+  const usPercent = total>0 ? (us/total)*100 : null;
+
+  // 2) Recent media
+  const media = await igGet(`/v19.0/${igUserId}/media?fields=id,caption,media_type,media_product_type,timestamp&limit=${window}`, accessToken);
+
+  // 3) For each media, get counts
+  const posts = [];
+  for(const m of (media.data||[]).slice(0, window)){
+    const meta = await igGet(`/v19.0/${m.id}?fields=like_count,comments_count,permalink,media_type,media_product_type,timestamp`, accessToken);
+
+    // Video/Reel views via insights (availability may vary by type)
+    let views = null;
+    try{
+      const ins = await igGet(`/v19.0/${m.id}/insights?metric=video_views,plays,reach`, accessToken);
+      const map = Object.fromEntries((ins.data||[]).map(x=>[x.name, x.values?.[0]?.value]));
+      views = map.video_views ?? map.plays ?? null;
+    }catch{ /* not a video/reel or permission missing */ }
+
+    const likes = meta.like_count ?? null;
+    const comments = meta.comments_count ?? null;
+    const shares = null; // IG Graph does not expose shares count for posts
+
+    // ER (IG): (likes + comments) / views (fallback to null if no views)
+    const er = (views && views>0) ? ((Number(likes||0)+Number(comments||0))/Number(views)) : null;
+
+    posts.push({
+      id: m.id,
+      title: (m.caption||'').slice(0,60),
+      url: meta.permalink,
+      published: (new Date(m.timestamp)).toISOString().slice(0,10),
+      views, likes, comments, shares, er
+    });
+  }
+
+  return { usPercent, posts };
+}
+
+async function igGet(path, token){
+  const url = `https://graph.facebook.com${path}&access_token=${encodeURIComponent(token)}`;
+  const r = await fetch(url);
+  if(!r.ok){ throw new Error(await r.text()); }
+  return r.json();
+}
+```
+
+### `src/verified-tiktok.js`
+
+```js
+// TikTok for Developers / Business API placeholder. You must complete OAuth and request the right scopes.
+// Docs vary by product; use endpoints that list recent videos and analytics for the connected account.
+
+export async function verifiedTikTok({ accessToken, advertiserId, businessAccountId, window=14 }){
+  if(!accessToken) throw new Error('Missing TikTok accessToken');
+  // Depending on product, you’ll:
+  // 1) List recent posts for the connected account
+  // 2) For each, fetch stats: views, likes, comments, shares
+  // 3) Compute ER = (likes + comments + shares) / views
+  // 4) Audience geography may require Ads/Business permissions
+
+  // Return a minimal shape so the UI works while you wire real calls
+  return {
+    usPercent: null, // fill when you can fetch audience_country
+    posts: [] // array of { published, title/id, url, views, likes, comments, shares, er }
+  };
+}
+```
+
+### `.env` (local only)
+
+```
+# Example placeholders — do NOT commit real tokens
+IG_APP_ID=xxx
+IG_APP_SECRET=xxx
+IG_REDIRECT_URI=https://yourapp.com/ig/callback
+TIKTOK_CLIENT_KEY=xxx
+TIKTOK_CLIENT_SECRET=xxx
+TIKTOK_REDIRECT_URI=https://yourapp.com/tiktok/callback
+```
+
+---
+
+## 3) How to deploy & wire
+
+1. **Frontend**: Push `index.html` to your `creator-finder` GitHub Pages repo (or Netlify). Replace the CSE ID.
+2. **Backend**: Deploy the Express app to **Vercel**/**Render**/**Railway**. Expose `/api/*` routes.
+3. **Connect the two**: If your backend domain differs (e.g., `https://cf-backend.onrender.com`), update the frontend endpoints: replace `fetch('/api/...')` with the full origin.
+4. **Verified mode**: Add OAuth flows (IG + TikTok). Pass the resulting tokens to `/api/verified/*` endpoints.
+5. **Public mode** (optional): Integrate a compliant collector (Playwright/Puppeteer on your server or a provider). Replace the `public-adapters` stubs so the endpoints return arrays of recent posts with visible counts.
+
+---
+
+## 4) ER formulas used
+
+* **Instagram (Verified):** `(likes + comments) / video_views` (for video/reels). If a post lacks views, ER returns `null`.
+* **TikTok (Verified):** `(likes + comments + shares) / views`.
+* **Public Mode:** Same formulas but only when those counts are publicly visible.
+
+---
+
+## 5) Notes & upgrades
+
+* Add a **Login with Instagram / TikTok** button and store tokens securely (server-side) per connected creator.
+* Cache responses (e.g., 1–6 hours) to reduce API calls.
+* Add **trend lines** (sparkline of last 30 posts).
+* Use **webhooks** where supported to refresh metrics.
+* Add a **lookup sidebar** that auto-detects platform from pasted URL.
+
+---
+
+**You’re set.** Frontend goes to GitHub Pages; backend to Vercel/Render. Replace the placeholders and you’ll have Creator Finder as a search engine **and** an analytics panel with Public estimates + Verified accuracy when creators connect.
+
+</body>
+</html>
+
