@@ -3,123 +3,244 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Creator Finder — Search + Analytics</title>
+  <title>Creator Finder — Search + Quick Avg Views (14)</title>
+
   <style>
-    body {
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f6f8fb;
-      color: #0f172a;
+    :root{
+      --bg:#0b1220; --ink:#0f172a; --mut:#64748b; --card:#ffffff; --accent:#2563eb;
+      --border:#e5e7eb; --soft:#f6f8fb;
     }
-    header {
-      background: #0b1220;
-      color: #fff;
-      padding: 16px;
-      font-size: 20px;
-      font-weight: bold;
-      text-align: center;
+    *{ box-sizing: border-box }
+    body{ margin:0; background:var(--soft); color:var(--ink);
+          font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial }
+    header{ position:sticky; top:0; z-index:5; background:var(--bg); color:#fff;
+            padding:16px; box-shadow:0 6px 20px rgba(2,6,23,.3) }
+    header h1{ margin:0; font-size:18px; letter-spacing:.2px }
+    main{ max-width:1100px; margin:20px auto; padding:0 16px;
+          display:grid; gap:18px; grid-template-columns: 1.15fr .85fr }
+    @media (max-width: 980px){ main{ grid-template-columns:1fr } }
+    .panel{ background:var(--card); border:1px solid var(--border); border-radius:16px;
+            box-shadow:0 10px 30px rgba(2,6,23,.06) }
+    .pad{ padding:16px }
+    h2{ margin:0 0 8px; font-size:16px }
+    small, .mut{ color:var(--mut) }
+    .hint{ font-size:12px; color:var(--mut); margin-top:6px }
+    input, textarea, button{
+      width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--border);
+      background:#fff; font:inherit
     }
-    main {
-      max-width: 1000px;
-      margin: 20px auto;
-      padding: 0 16px;
+    textarea{ min-height:112px; resize:vertical }
+    input:focus, textarea:focus{ outline:none; border-color:var(--accent);
+      box-shadow:0 0 0 3px rgba(37,99,235,.12) }
+    .btn{ background:var(--accent); color:#fff; border:0; cursor:pointer; font-weight:700 }
+    .btn.alt{ background:#fff; color:var(--ink); border:1px solid var(--border) }
+    .row{ display:flex; gap:10px; flex-wrap:wrap }
+    .row > *{ flex:1 1 180px }
+    .k{ font-size:12px; color:var(--mut); margin:0 }
+    .v{ font-size:26px; font-weight:800; margin:2px 0 0 }
+    .grid3{ display:grid; gap:12px; grid-template-columns:repeat(3, minmax(0,1fr)) }
+    @media (max-width: 640px){ .grid3{ grid-template-columns:1fr } }
+    table{ width:100%; border-collapse:collapse; font-size:14px; margin-top:10px }
+    th, td{ padding:10px 12px; border-bottom:1px solid #eef2f7; text-align:left }
+    th{ background:#f8fafc }
+    .right{ text-align:right }
+    .bookmarklets a{
+      display:inline-block; margin-right:10px; margin-bottom:10px;
+      padding:8px 10px; border-radius:10px; background:#eef2ff; color:#1d4ed8;
+      text-decoration:none; font-weight:700; font-size:13px; border:1px solid #dbe3ff;
     }
-    .panel {
-      background: #fff;
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    }
-    h2 { margin-top: 0; }
-    label { font-weight: 600; font-size: 14px; display:block; margin-bottom:4px; }
-    input, select, button {
-      width: 100%;
-      padding: 10px 12px;
-      margin-bottom: 12px;
-      border-radius: 8px;
-      border: 1px solid #ddd;
-    }
-    button {
-      background: #2563eb;
-      color: #fff;
-      font-weight: 700;
-      border: none;
-      cursor: pointer;
-    }
-    button:disabled { background: #94a3b8; cursor:not-allowed; }
-    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-    th, td { padding: 8px; border-bottom: 1px solid #eee; font-size: 14px; }
-    th { background: #f8fafc; text-align: left; }
-    .right { text-align: right; }
+    .badge{ display:inline-block; padding:2px 8px; border-radius:999px; background:#eff6ff;
+            color:#1d4ed8; font-size:12px; font-weight:700 }
   </style>
 
-  <!-- Google CSE with your ID -->
+  <!-- Google CSE (your ID is already set) -->
   <script async src="https://cse.google.com/cse.js?cx=930c9ba0544ee474b"></script>
 </head>
 <body>
-  <header>Creator Finder — Search + Analytics</header>
+  <header>
+    <h1>Creator Finder — Search + Quick Avg Views (last 14)</h1>
+  </header>
 
   <main>
-    <!-- Search -->
-    <section class="panel">
+    <!-- LEFT: Search (Google Programmable Search) -->
+    <section class="panel pad" aria-label="Creator Search">
       <h2>Find Creators</h2>
-      <div class="gcse-search"></div>
-      <p><small>Tip: search like <b>site:tiktok.com @handle</b> or <b>site:instagram.com "creator name"</b>.</small></p>
+      <div class="hint">
+        Tip: search like <b>site:tiktok.com @handle</b> or
+        <b>site:instagram.com "creator name"</b>. Your CSE should be limited to TikTok + Instagram.
+      </div>
+      <div style="margin-top:10px" class="gcse-search"></div>
     </section>
 
-    <!-- If you only want search results, use this line instead of the combined search box -->
-    <!-- <div class="gcse-searchresults-only"></div> -->
+    <!-- RIGHT: Quick Avg Views (no backend) -->
+    <section class="panel pad" aria-label="Quick Avg Views">
+      <h2>Quick Avg Views (paste list)</h2>
+      <p class="mut">
+        Paste up to <b>14</b> view counts from a creator’s most recent posts (accepts
+        <b>1.2M</b> / <b>843K</b> / <b>53234</b>). We parse K/M/B automatically.
+      </p>
 
-    <!-- Analytics panel placeholder (connects to backend if deployed) -->
-    <section class="panel">
-      <h2>Analytics</h2>
-      <label for="platform">Platform</label>
-      <select id="platform">
-        <option value="instagram">Instagram</option>
-        <option value="tiktok">TikTok</option>
-      </select>
+      <div class="row">
+        <textarea id="viewsInput" placeholder="e.g. 1.2M, 843K, 53,234, 98.5K, 2.3M ..."></textarea>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button id="pasteBtn" class="btn alt" title="Paste from clipboard">Paste from Clipboard</button>
+        <button id="calcBtn" class="btn" title="Compute average + median">Compute (last 14)</button>
+        <button id="clearBtn" class="btn alt" title="Clear">Clear</button>
+      </div>
 
-      <label for="profile">Profile URL / Handle</label>
-      <input id="profile" placeholder="e.g. https://www.instagram.com/creator/ or @creator" />
+      <div class="grid3" style="margin:14px 0 4px">
+        <div class="panel pad">
+          <p class="k">Count used</p>
+          <p class="v" id="countOut">—</p>
+        </div>
+        <div class="panel pad">
+          <p class="k">Average Views</p>
+          <p class="v" id="avgOut">—</p>
+        </div>
+        <div class="panel pad">
+          <p class="k">Median Views</p>
+          <p class="v" id="medOut">—</p>
+        </div>
+      </div>
 
-      <label for="window">Data window</label>
-      <select id="window">
-        <option value="14">Last 14 posts</option>
-        <option value="30">Last 30 posts</option>
-      </select>
+      <div class="panel pad" style="margin-top:8px">
+        <div class="row" style="align-items:center">
+          <div><span class="badge">Optional</span></div>
+          <div class="mut" style="flex: 1 1 auto">
+            Drag these to your bookmarks bar. On a creator’s page (after scrolling to load posts),
+            click a bookmarklet to auto-grab the first 14 visible view counts. It will
+            show avg/median and copy the values to your clipboard.
+          </div>
+        </div>
+        <div class="bookmarklets" style="margin-top:8px">
+          <!-- TikTok 14-Avg bookmarklet -->
+          <a href='javascript:(function(){function p(s){s=(s||"").toString().trim().toUpperCase().replace(/,/g,"");var m=s.match(/^([0-9]*\\.?[0-9]+)\\s*([KMB])?$/);if(!m)return NaN;var n=parseFloat(m[1]);var mult=m[2]==="K"?1e3:m[2]==="M"?1e6:m[2]==="B"?1e9:1;return n*mult;}function med(a){a=a.slice().sort(function(x,y){return x-y;});var m=Math.floor(a.length/2);return a.length%2?a[m]:(a[m-1]+a[m])/2;}function grab(){var nodes=Array.from(document.querySelectorAll("[data-e2e=\\"video-views\\"],strong,span,div"));var vals=[];nodes.forEach(function(el){var t=(el.innerText||"").trim();if(!t)return;if(/^[0-9][0-9\\.,]*\\s*[KMB]?$/i.test(t)){var v=p(t);if(Number.isFinite(v)&&v>0)vals.push(v);}});var seen=new Set(),out=[];for(var i=0;i<vals.length;i++){var v=Math.round(vals[i]);if(!seen.has(v)){seen.add(v);out.push(v);}}return out.slice(0,14);}var list=grab();if(!list.length){alert("No view counts found. Scroll the profile grid to load videos, then try again.");return;}var sum=list.reduce(function(a,b){return a+b;},0);var avg=sum/list.length;var m=med(list);var csv=list.join(",");try{navigator.clipboard.writeText(csv);}catch(e){}alert("TikTok — using "+list.length+" items\\nAverage: "+Math.round(avg).toLocaleString()+"\\nMedian: "+Math.round(m).toLocaleString()+"\\n(Values copied to clipboard)");})();'>
+            TikTok 14-Avg
+          </a>
 
-      <label for="usPercent">US Audience % (manual if public mode)</label>
-      <input id="usPercent" type="number" min="0" max="100" step="0.1" placeholder="Paste % if you have it" />
+          <!-- Instagram Reels 14-Avg bookmarklet -->
+          <a href='javascript:(function(){function p(s){s=(s||"").toString().trim().toUpperCase().replace(/,/g,"");var m=s.match(/^([0-9]*\\.?[0-9]+)\\s*([KMB])?$/);if(!m)return NaN;var n=parseFloat(m[1]);var mult=m[2]==="K"?1e3:m[2]==="M"?1e6:m[2]==="B"?1e9:1;return n*mult;}function med(a){a=a.slice().sort(function(x,y){return x-y;});var m=Math.floor(a.length/2);return a.length%2?a[m]:(a[m-1]+a[m])/2;}function grab(){var nodes=Array.from(document.querySelectorAll("span,div"));var vals=[];nodes.forEach(function(el){var t=(el.innerText||"").trim();if(!t)return;if(/\\bviews?\\b/i.test(t)){var n=t.replace(/[^0-9KMB\\.\\s]/gi,"").trim().split(/\\s+/).find(Boolean);var v=p(n);if(Number.isFinite(v)&&v>0)vals.push(v);}else if(/^[0-9][0-9\\.,]*\\s*[KMB]$/.test(t)){var v2=p(t);if(Number.isFinite(v2)&&v2>0)vals.push(v2);} });var seen=new Set(),out=[];for(var i=0;i<vals.length;i++){var v=Math.round(vals[i]);if(!seen.has(v)){seen.add(v);out.push(v);} }return out.slice(0,14);}var list=grab();if(!list.length){alert("No reel view counts found. Open the Reels tab and scroll to load thumbnails, then try again.");return;}var sum=list.reduce(function(a,b){return a+b;},0);var avg=sum/list.length;var m=med(list);var csv=list.join(",");try{navigator.clipboard.writeText(csv);}catch(e){}alert("Instagram (Reels) — using "+list.length+" items\\nAverage: "+Math.round(avg).toLocaleString()+"\\nMedian: "+Math.round(m).toLocaleString()+"\\n(Values copied to clipboard)");})();'>
+            Instagram Reels 14-Avg
+          </a>
+        </div>
 
-      <label for="mode">Mode</label>
-      <select id="mode">
-        <option value="public">Public (no login)</option>
-        <option value="verified">Verified (owner connected)</option>
-      </select>
+        <p class="hint">
+          After running a bookmarklet, press <b>Cmd/Ctrl+V</b> in the box above and click <b>Compute</b>.
+        </p>
+      </div>
 
-      <button id="analyze">Analyze</button>
-      <button id="exportCsv" disabled>Export CSV</button>
-      <button id="requestAccess">Request Access from Creator</button>
-
-      <h3>Results</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Published</th>
-            <th>Post</th>
-            <th class="right">Views</th>
-            <th class="right">Likes</th>
-            <th class="right">Comments</th>
-            <th class="right">Shares</th>
-            <th class="right">ER</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
+      <div id="calcOut" style="margin-top:10px"></div>
+      <div class="panel pad" style="margin-top:8px; display:none" id="valuesCard">
+        <h3 style="margin:0 0 6px; font-size:14px">Values used</h3>
+        <table>
+          <thead><tr><th>#</th><th class="right">Views</th></tr></thead>
+          <tbody id="valuesTbody"></tbody>
+        </table>
+      </div>
     </section>
   </main>
+
+  <script>
+    // ---- Quick Avg logic (no backend) ----
+    (function(){
+      const $ = (id)=>document.getElementById(id);
+      const input = $('viewsInput');
+      const outCount = $('countOut');
+      const outAvg = $('avgOut');
+      const outMed = $('medOut');
+      const calcOut = $('calcOut');
+      const valuesCard = $('valuesCard');
+      const valuesTbody = $('valuesTbody');
+
+      function parseAbbrev(s){
+        if (!s) return NaN;
+        s = String(s).trim().toUpperCase().replace(/,/g,'');
+        // remove words like "views"
+        s = s.replace(/\bVIEWS?\b/g,'').trim();
+        const m = s.match(/^([0-9]*\.?[0-9]+)\s*([KMB])?$/);
+        if (!m) return NaN;
+        const n = parseFloat(m[1]);
+        const mult = m[2]==='K'?1e3 : m[2]==='M'?1e6 : m[2]==='B'?1e9 : 1;
+        return n * mult;
+      }
+      function median(arr){
+        const a = arr.slice().sort((x,y)=>x-y);
+        const m = Math.floor(a.length/2);
+        return a.length%2 ? a[m] : (a[m-1]+a[m])/2;
+      }
+      function format(n){ return Number(Math.round(n)).toLocaleString(); }
+
+      async function pasteFromClipboard(){
+        try{
+          const txt = await navigator.clipboard.readText();
+          if (txt) {
+            input.value = txt;
+            compute();
+          }
+        }catch(e){
+          alert('Clipboard read failed. Paste manually with Cmd/Ctrl+V.');
+        }
+      }
+
+      function compute(){
+        // Accept comma, space, newline separated tokens; take first 14 valid numbers
+        const raw = input.value
+          .split(/[\s,]+/)               // split on spaces/commas/newlines
+          .filter(Boolean)
+          .slice(0, 50);                 // let users paste more; we’ll trim to 14 after parsing
+
+        const values = [];
+        for (const token of raw){
+          const v = parseAbbrev(token);
+          if (Number.isFinite(v) && v>0) values.push(v);
+          if (values.length >= 14) break;
+        }
+
+        if (!values.length){
+          outCount.textContent = '—';
+          outAvg.textContent = '—';
+          outMed.textContent = '—';
+          calcOut.innerHTML = '<span class="mut">No valid numbers found. Paste counts like 1.2M, 843K, 53234.</span>';
+          valuesCard.style.display = 'none';
+          valuesTbody.innerHTML = '';
+          return;
+        }
+
+        const used = values.slice(0,14);
+        const sum = used.reduce((a,b)=>a+b,0);
+        const avg = sum / used.length;
+        const med = median(used);
+
+        outCount.textContent = used.length;
+        outAvg.textContent = format(avg);
+        outMed.textContent = format(med);
+
+        // details table
+        valuesTbody.innerHTML = used
+          .map((v,i)=>`<tr><td>${i+1}</td><td class="right">${format(v)}</td></tr>`)
+          .join('');
+        valuesCard.style.display = '';
+
+        calcOut.innerHTML = `
+          <div class="mut">
+            Using the first <b>${used.length}</b> parsed values. K/M/B recognized.
+            If counts are hidden on-platform, use the bookmarklet or open posts to reveal views.
+          </div>`;
+      }
+
+      $('calcBtn').addEventListener('click', compute);
+      $('clearBtn').addEventListener('click', ()=>{
+        input.value = '';
+        outCount.textContent = '—';
+        outAvg.textContent = '—';
+        outMed.textContent = '—';
+        calcOut.textContent = '';
+        valuesCard.style.display = 'none';
+        valuesTbody.innerHTML = '';
+      });
+      $('pasteBtn').addEventListener('click', pasteFromClipboard);
+    })();
+  </script>
 </body>
 </html>
-
